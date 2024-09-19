@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+        <title><%= title %></title>
+        <link rel='stylesheet' href='/stylesheets/profile.css' />
+  </head>
+  <body >
+      <div style="display: block; margin: 12px 0% ;">
+        <div id="change-img">thay anh</div>
+        <img id="background" src="/images/icon.jpg"/>
+        <img id="icon" src="/images/icon.jpg"/>
+      </div>
+      <!-- code nay nghich cho vui
+        <iframe style="width: 100%; height: 600px;" src="/">
+          hi
+        </iframe> 
+        -->
+      <p style="text-align: center;"> Hi <%= user.username%></p>
+      <br/>
+      <div id="user-list"></div> <!-- Khu vực để hiển thị danh sách người dùng -->
+        <a href="/">Back to index</a>
+      <!--jquery-->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script>
+        $(document).ready(function() {
+          // Gửi yêu cầu AJAX đến endpoint API
+          $.ajax({
+            url: '/api/users', // Đường dẫn đến API của bạn
+            method: 'GET', // Phương thức GET
+            success: function(response) {
+              // Khi nhận được phản hồi từ server, xử lý và hiển thị dữ liệu
+              var userList = $('#user-list'); // Lấy phần tử để hiển thị danh sách người dùng
+              userList.empty(); // Xóa các nội dung cũ (nếu có)
+    
+              // Duyệt qua danh sách người dùng từ phản hồi
+              response.forEach(function(user) {
+                // Tạo một phần tử cho từng người dùng và thêm vào danh sách
+                userList.append('<p>User ID: ' + user.id + ', Name: ' + user.name + '</p>');
+              });
+            },
+            error: function(err) {
+              console.error('Có lỗi xảy ra:', err); // Xử lý lỗi
+            }
+          });
+        });
+      </script>
+  </body>
+</html>

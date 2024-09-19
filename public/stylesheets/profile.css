@@ -1,0 +1,35 @@
+#background{
+    position: relative;
+    width: 100%;
+    height: 400px;
+}
+
+#icon{
+    border: 0.7px solid black;
+    display: flex;
+    border-radius: 50%; 
+    position: relative;
+    width: 10%;
+    height: 140px;
+    margin: 1px 45%;  
+  }
+  #change-img{
+    position: relative;
+    display: none;
+    color: black;
+  }
+    #icon:hover #change-img{
+    display: flex;
+    position: relative;
+    color: black;  
+  } 
+
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+    display: block;
+}
+
+a {
+    color: #00B7FF;
+}
+  
