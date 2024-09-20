@@ -1,7 +1,6 @@
 const bcrypt = require('bcrypt');
-const User = require('../models/users');
-const FriendRequest = require('../models/friendrequest');
-const Friend = require('../models/friends'); // Correct capitalization
+const User = require('../models/user/users');
+const Friend = require('../models/user/userfriends'); // Correct capitalization
 
 exports.listfriend = async (req, res) => {
     try {

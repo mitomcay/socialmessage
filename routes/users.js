@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
 var authMiddleware = require('../middlewares/authMiddleware');
-var User = require('../models/users');
+var User = require('../models/user/users');
 
 // GET index page
 router.get('/', authMiddleware, async (req, res) => {

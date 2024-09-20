@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var authMiddleware = require('../middlewares/authMiddleware');
-var User = require('../models/users');
+var User = require('../models/user/users');
 
 /* GET home page. */
 router.get('/', authMiddleware, function(req, res, next) {
