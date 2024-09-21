@@ -41,9 +41,9 @@ const whoToFollow = [
 ];
 
 // Route for the home page
-router.get('/',authMiddleware, (req, res) => {
+router.get('/', authMiddleware, (req, res) => {
     try {
-        res.render('index', { tweets, trends, whoToFollow });
+        res.render('index', { tweets, trends, whoToFollow, user: req.session.user });
     } catch (error) {
         res.status(500).send('Internal Server Error');
     }
