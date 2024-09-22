@@ -4,14 +4,14 @@ var bcrypt = require('bcrypt');
 var authMiddleware = require('../middlewares/authMiddleware');
 var User = require('../models/user/users');
 
-// GET index page
+// GET manager page
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const users = await User.find();
         const loggedInUserId = req.session.userId;
         console.log(loggedInUserId);
-        res.render('user', { 
-            title: 'User List',
+        res.status(200).json({ 
+            message: 'accessed',
             users: users,
             loggedInUserId: loggedInUserId
         });
@@ -34,8 +34,8 @@ router.post('/', authMiddleware, async (req, res) => {
         
         await newUser.save();
         const users = await User.find();
-        res.render('user', { 
-            title: 'Manager Server', 
+        res.status(200).json({ 
+            message: 'add new user success', 
             users: users
         });
     } catch (error) {
@@ -47,7 +47,7 @@ router.post('/', authMiddleware, async (req, res) => {
 router.post('/delete-user/:id', authMiddleware, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
-        res.redirect('/user');
+        res.status(200).json({message: 'delete'+ req.params.id + 'success'});
     } catch (error) {
         res.status(500).send('Internal Server Error');
     }
@@ -58,7 +58,7 @@ router.post('/update-user/:id', authMiddleware, async (req, res) => {
     try {
         const { role } = req.body;
         await User.findByIdAndUpdate(req.params.id, { role: role });
-        res.redirect('/user');
+        res.status(200).json({message: 'update role of'+ req.params.id + 'success'});
     } catch (error) {
         res.status(500).send('Internal Server Error');
     }

@@ -28,10 +28,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    salt:{
-        type: String,
-        require: true,
-    },
     PasswordUpdatedAt:{
         type: Date,
         default: Date.now,
@@ -46,7 +42,7 @@ const userSchema = new mongoose.Schema({
     },
     Isdeleted:{
         type: Boolean,
-        require: true,
+        required: true,
         default: false,
     },
     DeletedAt:{
@@ -55,7 +51,7 @@ const userSchema = new mongoose.Schema({
     },
     IsDeactivated:{
         type: Boolean,
-        require: true,
+        required: true,
         default: false,
     },
     DeactivatedAt:{

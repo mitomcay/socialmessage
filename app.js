@@ -13,8 +13,8 @@ var usersRouter = require('./routes/users');
 var loginRouter = require('./routes/login'); 
 var logoutRouter = require('./routes/logout');
 var registerRouter = require('./routes/register'); 
-var profileRouter = require('./routes/profile'); 
-var friendRouter = require('./routes/friend'); 
+var profileRouter = require('./routes/userprofile'); 
+var friendRouter = require('./routes/userfriend'); 
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -32,7 +32,7 @@ app.use(session({
 }));
 
 app.use('/', indexRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
-app.use('/user', usersRouter);
+app.use('/manager', usersRouter);
 app.use('/friend', friendRouter);
 app.use('/login', loginRouter);
 app.use('/logout', logoutRouter);
@@ -48,7 +48,6 @@ app.use(function(req, res, next) {
 app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
-
   res.status(err.status || 500);
   res.render('error');
 });

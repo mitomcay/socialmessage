@@ -45,9 +45,9 @@ exports.handleLogin = async (req, res) => {
         } else {
             user = await User.findOne({ username });
         }
-
+        
         if (user) {
-            if (user.role === 'admin') {
+            if (user.role == 'user') {
                 const match = await bcrypt.compare(password, user.password);
                 if (match) {
                     // Đặt lại số lần thử đăng nhập thành công
@@ -55,7 +55,24 @@ exports.handleLogin = async (req, res) => {
 
                     req.session.userId = user._id;
                     req.session.user = { username: user.username, password: user.password };
-                    return res.status(200).json({ message: 'Login success', user: req.session.user, userId: req.session.userId });
+                    return res.status(200).json({ message: 'Login success with user', user: req.session.user, userId: req.session.userId, role: 'user' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            } else if (user.role === 'admin') {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password };
+                    return res.status(200).json({ message: 'Login success with admin', user: req.session.user, userId: req.session.userId, role: 'admin' });
                 } else {
                     // Cập nhật số lần thử đăng nhập không thành công
                     if (!loginAttempts[username]) {
@@ -65,7 +82,22 @@ exports.handleLogin = async (req, res) => {
                     return res.status(401).json({ message: 'Incorrect password' });
                 }
             } else {
-                return res.status(401).json({ message: 'User is not an admin' });
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password };
+                    return res.status(200).json({ message: 'Login success with moderator', user: req.session.user, userId: req.session.userId, role: 'moderator' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
             }
         } else {
             return res.status(401).json({ message: "User not found" });
@@ -80,22 +112,27 @@ exports.handleRegister = async (req, res) => {
     const { username, email, phone, password, confirmPassword } = req.body;
 
     try {
-        if (password !== confirmPassword) {
-            return res.status(400).json({ message: 'Passwords do not match' });
+        if( password.length <= 8 || confirmPassword.length <= 8) {
+            return res.status(400).json({ message: 'Your password is short' });
         }
-
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
+        if (!passwordRegex.test(password)) {
+            return res.status(400).json({ message: 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.' });
+        }
+        if( password !== confirmPassword ) {
+            return res.status(400).json({ message: 'Your passwords do not match' });
+        }
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             return res.status(400).json({ message: 'Username or Email already exists' });
         }
-
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, email, phone, password: hashedPassword });
 
         await newUser.save();
 
         if (!req.session) req.session = {};
-        req.session.user = { username: newUser.username };
+        req.session.user = { username: newUser.username, password: newUser.password };
 
         return res.status(201).json({ message: 'Registration successful', user: req.session.user });
     } catch (error) {
@@ -112,4 +149,18 @@ exports.logout = (req, res) => {
         }
         return res.status(200).json({ message: 'Logout successful' });
     });
+};
+
+exports.showprofilepages =  async(req,res) => {
+    try {
+        const { username } = req.body;
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found!' });
+        }
+        res.status(200).json({message: 'get profile success!', user: user});
+    } catch (error) {
+        console.log(error);
+        res.status(400).json({message: error});
+    }
 };

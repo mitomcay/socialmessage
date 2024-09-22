@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var authMiddleware = require('../middlewares/authMiddleware');
+var authMiddleware = require('.');
 var friendController = require('../controllers/friendrequestcontroller');
 
 router.get('/', authMiddleware, friendController.listfriend);
