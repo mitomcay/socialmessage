@@ -132,7 +132,7 @@ exports.handleRegister = async (req, res) => {
         await newUser.save();
 
         if (!req.session) req.session = {};
-        req.session.user = { username: newUser.username, password: newUser.password };
+        req.session.user = { username: newUser.username, password: newUser.password, avatar: newUser.avatar };
 
         return res.status(201).json({ message: 'Registration successful', user: req.session.user });
     } catch (error) {
@@ -149,18 +149,4 @@ exports.logout = (req, res) => {
         }
         return res.status(200).json({ message: 'Logout successful' });
     });
-};
-
-exports.showprofilepages =  async(req,res) => {
-    try {
-        const { username } = req.body;
-        const user = await User.findOne({ username });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found!' });
-        }
-        res.status(200).json({message: 'get profile success!', user: user});
-    } catch (error) {
-        console.log(error);
-        res.status(400).json({message: error});
-    }
 };

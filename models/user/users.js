@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    avatar: { 
+        type: String, 
+        default: '/images/defaultavatar.jpg',
+    },
     LastActiveAt:{
         type: Date,
         default: Date.now,

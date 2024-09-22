@@ -6,7 +6,7 @@ var logger = require('morgan');
 const session = require('express-session');
 var mongoose = require('mongoose');
 var app = express();
-
+const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -19,6 +19,11 @@ var friendRouter = require('./routes/userfriend');
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+app.use(cors({
+  origin: 'http://yourfrontend.com', // Hoặc mảng các domain frontend
+  credentials: true
+}));
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -27,8 +32,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
   resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false } // Đặt thành true nếu bạn đang sử dụng HTTPS
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie bảo mật trong môi trường production (HTTPS)
+    httpOnly: true, // Bảo vệ cookie khỏi các tấn công XSS
+    maxAge: 60000 // Thời gian sống của session cookie (ví dụ: 60 giây)
+  }
 }));
 
 app.use('/', indexRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
