@@ -13,9 +13,14 @@ const userfollowsschema = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
+    Status:{
+        type: String,
+        enum: ['Pending', 'Accepted'], // Các giá trị có thể có của role
+        default: 'Pending', // Giá trị mặc định
+    },
 });
 
 // Tạo model từ schema
-const userfollows = mongoose.model('userfollows', userfollowsschemaema);
+const userfollows = mongoose.model('userfollows', userfollowsschema);
 
 module.exports = userfollows;
