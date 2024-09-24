@@ -142,11 +142,32 @@ exports.handleRegister = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Logout error:', err);
-            return res.status(500).json({ message: 'Error during logout' });
+    try{
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Logout error:', err);
+                return res.status(500).json({ message: 'Error during logout' });
+            }
+            return res.status(200).json({ message: 'Logout successful' });
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        return res.status(500).json({ message: 'Error during registration' });
+    }
+};
+
+exports.finduser = async (req,res) => {
+    try {
+        const{ name } = req.body;
+        const user = User.findOne({name});
+
+        if (!user) {
+            return res.status(400).json({ message: 'user not found'});
         }
-        return res.status(200).json({ message: 'Logout successful' });
-    });
+
+        return res.status(200).json({ message: 'success', name: user.username});
+    } catch (error) {
+         console.error('Registration error:', error);
+        return res.status(500).json({ message: 'Error during registration' });
+    }
 };

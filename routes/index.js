@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var authMiddleware = require('../middlewares/authMiddleware');
 const User = require('../models/user/users');
+const usercontroller = require('../controllers/usercontroller');
 
 // Route for the home page
 router.get('/', authMiddleware, (req, res) => {
@@ -17,5 +18,8 @@ router.get('/', authMiddleware, (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+
+router.get('/find', usercontroller.finduser);
+
 
 module.exports = router;
