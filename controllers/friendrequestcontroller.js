@@ -1,6 +1,8 @@
 const User = require('../models/user/users');
 const Friend = require('../models/user/userfriends');
 const Follow = require('../models/user/userfollows'); 
+const chat = require('../models/chat/chat');
+const chatmember = require('../models/chat/chatmember');
 
 exports.listfriend = async (req, res) => {
     try {
@@ -107,7 +109,8 @@ exports.acceptfriend = async (req, res) => {
         const senderId = req.session.userId;
         const { requestId } = req.body;
         console.log(senderId);
-        // Tìm yêu cầu kết bạn theo requestId
+
+        // Tìm yêu cầu kết bạn
         const friendRequest = await Follow.findOne({
             Sender: requestId,
             Accept: senderId
@@ -128,26 +131,55 @@ exports.acceptfriend = async (req, res) => {
         const existingRequest = await Friend.findOne({
             User1: senderId,
             User2: requestId
-        }); 
-        const existingRequestreverst = await Friend.findOne({
+        });
+        const existingRequestReversed = await Friend.findOne({
             User2: senderId,
             User1: requestId
-        }); 
+        });
 
-
-        if(existingRequest || existingRequestreverst ) {
-            res.status(400).json({ message:'ban da chap nhan truoc do roi'});
+        if (existingRequest || existingRequestReversed) {
+            return res.status(400).json({ message: 'You have already accepted this request' });
         }
+
+        // Tạo bạn bè mới
         const newFriend = new Friend({ User1: senderId, User2: requestId });
-        const newFriend2 = new Friend({ User2: senderId, User1: requestId });  
+        const newFriend2 = new Friend({ User2: senderId, User1: requestId });
         await newFriend.save();
         await newFriend2.save();
 
         friendRequest.status = 'Accepted';
         await friendRequest.save();
 
-        // Trả về thông báo và URL để chuyển hướng
-        res.status(200).json({ message: 'Friend request accepted successfully'});
+        // Tạo chat mới cho cả hai người
+        const newChat = new chat({
+            name: `Chat between ${sender.name} and ${receiver.name}`
+        });
+        await newChat.save();
+
+        // Tạo thành viên chat cho cả hai
+        const creatorChatMember1 = await chatmember.create({
+            User: senderId,
+            Chat: newChat._id,
+            chatmembertype: 'Admin'  // Sender là admin
+        });
+        const creatorChatMember2 = await chatmember.create({
+            User: requestId,
+            Chat: newChat._id,
+            chatmembertype: 'Admin'  // Receiver là admin
+        });
+
+        // Trả về model chat với tên người nhận cho người gửi (A)
+        res.status(200).json({
+            message: 'Friend request accepted successfully',
+            chat: {
+                chatId: newChat._id,
+                name: receiver.name  // Trả về tên của người nhận B
+            }
+        });
+
+        // Optionally, gửi thông tin này cho phía client của người nhận (B) nếu bạn có socket:
+        // socket.to(requestId).emit('newChat', { chatId: newChat._id, name: sender.name });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });

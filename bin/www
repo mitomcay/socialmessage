@@ -1,70 +1,68 @@
 #!/usr/bin/env node
 
-/**
- * Module dependencies.
- */
-
-var app = require('../app');
-var debug = require('debug')('nnkb:server');
+var app = require('../app'); // Import app
+var debug = require('debug')('nnkb:server'); 
 var http = require('http');
 
-/**
- * Get port from environment and store in Express.
- */
-
+// Lấy port từ biến môi trường hoặc thiết lập mặc định
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
-/**
- * Create HTTP server.
- */
-
+// Tạo HTTP server
 var server = http.createServer(app);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port, ()=> {
-  console.log('server running');
+// Tích hợp socket.io với server
+const socketIo = require('socket.io');
+const io = socketIo(server, {
+  cors: {
+    origin: "http://yourfrontend.com", // Thay bằng domain frontend của bạn
+    methods: ["GET", "POST"],
+    credentials: true
+  }
 });
+
+/**
+ * Lắng nghe sự kiện kết nối từ client
+ */
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // Sự kiện khi người dùng gửi tin nhắn
+  socket.on('message', (data) => {
+    console.log('Message from client:', data);
+    
+    // Phát lại tin nhắn tới tất cả các client khác (hoặc điều chỉnh theo nhu cầu)
+    io.emit('message', data);
+  });
+
+  // Sự kiện khi người dùng ngắt kết nối
+  socket.on('disconnect', () => {
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Cung cấp io cho app
+app.set('socketio', io);
+
+// Server lắng nghe trên port
+server.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
 server.on('error', onError);
 server.on('listening', onListening);
 
-/**
- * Normalize a port into a number, string, or false.
- */
-
 function normalizePort(val) {
   var port = parseInt(val, 10);
-
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
-
-  if (port >= 0) {
-    // port number
-    return port;
-  }
-
+  if (isNaN(port)) return val;
+  if (port >= 0) return port;
   return false;
 }
 
-/**
- * Event listener for HTTP server "error" event.
- */
-
 function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+  if (error.syscall !== 'listen') throw error;
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
-
-  // handle specific listen errors with friendly messages
+  var bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
   switch (error.code) {
     case 'EACCES':
       console.error(bind + ' requires elevated privileges');
@@ -79,14 +77,8 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
 function onListening() {
   var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
+  var bind = typeof addr === 'string' ? 'pipe ' + addr : 'port ' + addr.port;
   debug('Listening on ' + bind);
 }
