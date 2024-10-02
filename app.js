@@ -16,8 +16,8 @@ var logoutRouter = require('./routes/logout');
 var registerRouter = require('./routes/register'); 
 var profileRouter = require('./routes/userprofile'); 
 var friendRouter = require('./routes/userfriend'); 
-var chatRouter = require('./routes/chat'); 
-var messageRouter = require('./routes/message'); 
+var communityRouter = require('./routes/community'); 
+var chatRouter = require('./routes/chat'); var messageRouter = require('./routes/message'); 
 
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
@@ -51,6 +51,7 @@ app.use('/logout', logoutRouter);
 app.use('/register', registerRouter);
 app.use('/profile', profileRouter);
 app.use('/chat', chatRouter);
+app.use('/community', communityRouter);
 app.use('/message', messageRouter);
 
 // catch 404 and forward to error handler
