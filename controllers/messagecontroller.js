@@ -28,7 +28,13 @@ exports.sendMessage = async (req, res) => {
         });
       }));
     }
-
+    
+    const foundChat = await chat.findById(chatId);
+    if(!foundChat){
+      return res.status(400).json({ 
+        message: 'Group not found'
+      });
+    } 
     // Gửi tin nhắn mới đến tất cả các client trong chat
     const io = req.app.get('socketio');
     io.to(chatId).emit('newMessage', newMessage); // Phát sự kiện mới cho tất cả các client trong chat
@@ -38,7 +44,7 @@ exports.sendMessage = async (req, res) => {
       data: newMessage 
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({ message: error });
   }
 };
 
@@ -71,11 +77,22 @@ exports.getMessage = async (req, res) => {
     // Chờ tất cả các lời hứa (promise) hoàn thành
     const messages = await Promise.all(messagePromises);
 
-    // Gộp tất cả các tin nhắn vào một mảng
-    const allMessages = messages.flat(); // Gộp mảng 2D thành 1D
+    const mediaPromises = messages.flat().map(async (msg) => {
+      const mediaList = await messagemedia.find({
+        message: msg._id
+      }).populate('media');  // Populate để lấy chi tiết media
+
+      // Gán danh sách media vào mỗi tin nhắn
+      return {
+        ...msg.toObject(),
+        media: mediaList.map(m => m.media)
+      };
+    });
+
+    const messagesWithMedia = await Promise.all(mediaPromises);
 
     // Sắp xếp lại theo thời gian (nếu cần), từ tin nhắn cũ đến mới
-    const sortedMessages = allMessages.sort((a, b) => a.createdAt - b.createdAt);
+    const sortedMessages = messagesWithMedia.sort((a, b) => a.createdAt - b.createdAt);
 
     res.status(200).json({
       message: "Success",

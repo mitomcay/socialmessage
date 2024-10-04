@@ -15,11 +15,11 @@ const  communitychema  = mongoose.Schema({
     },
     createdAt:{
         type: Date,
-        type: Date.now,
+        default: Date.now,
     },
     updatedAt:{
         type: Date,
-        type: Date.now,
+        default: Date.now,
     },
     Isprivate:{
         type: Boolean,

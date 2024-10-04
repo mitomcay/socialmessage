@@ -21,7 +21,7 @@ exports.getchat = async (req, res) => {
       }
 
       // Send success response with chat name
-      res.status(200).json({ message: "Success", chatname: foundChat.name });
+      res.status(200).json({ message: "Success", chatname: foundChat.name, chatid: foundChat._id });
 
   } catch (error) {
       res.status(500).json({ message: "Error: " + error.message });
