@@ -10,6 +10,14 @@ exports.sendMessage = async (req, res) => {
     const { content, chatId, repliedMessageId, mediaIds } = req.body;
     const senderId = req.session.userId;
 
+    if(content.length > 500){
+      return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn"});
+    }
+
+    if(content.length <= 0){
+      return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn"});
+    }
+
     // Create the message
     const newMessage = await message.create({
       content,
@@ -127,5 +135,21 @@ exports.likeMessage = async (req, res) => {
       res.status(201).json({ message: 'Message liked successfully', data: like });
   } catch (error) {
       res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deletemessage = async (req,res) =>{
+  try {
+    const { messageId } = req.body;
+    const userid = req.session.userId;
+
+    const usermessage = await message.findone( messageId);
+    if(usermessage.senderId !== userid){
+      return res.status(400).json({ message: 'khong the xoa tin nhan cua nguoi khac'});
+    }
+    await message.Delete(usermessage);
+    await message.save();
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

@@ -51,7 +51,7 @@ exports.likepost = async (req, res) => {
     })
     if (existinglikepost){
       // chay ham xoa like
-      await postlike.Delete(exsitinglikepost);
+      await postlike.Delete(existinglikepost);
     }
 
     const newlikepost = new postlike({
