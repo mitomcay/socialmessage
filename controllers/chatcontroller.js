@@ -41,7 +41,9 @@ exports.createChat = async (req, res) => {
     const creatorChatMember = await chatmember.create({
         User: creatorId,
         Chat: newChat._id,
-        chatmembertype: 'Admin'  // Creator is Admin by default
+        chatmembertype: 'Admin',
+        Isgroup: true,
+         // Creator is Admin by default
     });
 
     // Iterate over each member and create chatmember entries

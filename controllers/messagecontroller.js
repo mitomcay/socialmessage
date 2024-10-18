@@ -105,6 +105,7 @@ exports.getMessage = async (req, res) => {
     res.status(200).json({
       message: "Success",
       data: sortedMessages
+      
     });
   } catch (error) {
     res.status(500).json({ message: "loi" + error.message });

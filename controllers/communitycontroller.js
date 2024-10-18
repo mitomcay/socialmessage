@@ -57,7 +57,7 @@ exports.getcommunity = async (req, res) => {
       }
 
       // Send success response with chat name
-      res.status(200).json({ message: "Success", communityname: foundcomunity.name });
+      res.status(200).json({ message: "Success", communityname: foundcomunity.name, communityid: foundcomunity._id });
 
   } catch (error) {
       res.status(500).json({ message: "Error: " + error.message });

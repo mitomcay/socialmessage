@@ -17,6 +17,10 @@ const  chatschema  = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    Isgroup: {
+        type: Boolean,
+        default: false,
+    }
 });
 
 const chat = mongoose.model('chat', chatschema);
