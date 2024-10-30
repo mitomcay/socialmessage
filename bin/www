@@ -43,9 +43,9 @@ io.on('connection', (socket) => {
 
 // Cung cấp io cho app
 app.set('socketio', io);
-
+const host = '0.0.0.0';
 // Server lắng nghe trên port
-server.listen(port, () => {
+server.listen(port,host, () => {
   console.log(`Server is running on port ${port}`);
 });
 

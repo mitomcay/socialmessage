@@ -5,23 +5,41 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var mongoose = require('mongoose');
 var app = express();
+var favicon = require('serve-favicon');
+
 const session = require('express-session');
+const passport = require('./config/passport-config');
 const cors = require('cors');
 
+// routes cho web
+var indexwebRouter = require('./routes/web/index');
+var userswebRouter = require('./routes/web/users');
+var loginwebRouter = require('./routes/web/login'); 
+var logoutwebRouter = require('./routes/web/logout');
+var registerwebRouter = require('./routes/web/register'); 
+var profilewebRouter = require('./routes/web/userprofile'); 
+var friendwebRouter = require('./routes/web/userfriend'); 
+var communitywebRouter = require('./routes/web/community'); 
+var chatwebRouter = require('./routes/web/chat'); 
+var messagewebRouter = require('./routes/web/message'); 
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var loginRouter = require('./routes/login'); 
-var logoutRouter = require('./routes/logout');
-var registerRouter = require('./routes/register'); 
-var profileRouter = require('./routes/userprofile'); 
-var friendRouter = require('./routes/userfriend'); 
-var communityRouter = require('./routes/community'); 
-var chatRouter = require('./routes/chat'); var messageRouter = require('./routes/message'); 
+// routes cho mobile
+var indexapiRouter = require('./routes/api/index');
+var usersapiRouter = require('./routes/api/users');
+var loginapiRouter = require('./routes/api/login');
+var logoutapiRouter = require('./routes/api/logout');
+var registerapiRouter = require('./routes/api/register');
+var profileapiRouter = require('./routes/api/userprofile');
+var friendapiRouter = require('./routes/api/userfriend');
+var communityapiRouter = require('./routes/api/community');
+var chatapiRouter = require('./routes/api/chat');
+var messageapiRouter = require('./routes/web/message'); 
 
+// app.set
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
+// app.use
 app.use(cors({
   origin: 'http://yourfrontend.com', // Hoặc mảng các domain frontend
   credentials: true
@@ -31,11 +49,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+// Đường dẫn đến favicon
+app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie bảo mật trong môi trường production (HTTPS)
     httpOnly: true, // Bảo vệ cookie khỏi các tấn công XSS
@@ -43,16 +63,32 @@ app.use(session({
   }
 }));
 
-app.use('/', indexRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
-app.use('/manager', usersRouter);
-app.use('/friend', friendRouter);
-app.use('/login', loginRouter);
-app.use('/logout', logoutRouter);
-app.use('/register', registerRouter);
-app.use('/profile', profileRouter);
-app.use('/chat', chatRouter);
-app.use('/community', communityRouter);
-app.use('/message', messageRouter);
+app.use(passport.initialize());
+app.use(passport.session());
+
+// app.use web
+app.use('/', indexwebRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
+app.use('/manager', userswebRouter);
+app.use('/friend', friendwebRouter);
+app.use('/login', loginwebRouter);
+app.use('/logout', logoutwebRouter);
+app.use('/register', registerwebRouter);
+app.use('/profile', profilewebRouter);
+app.use('/chat', chatwebRouter);
+app.use('/community', communitywebRouter);
+app.use('/message', messagewebRouter);
+
+// app.use api
+app.use('/api', indexapiRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
+app.use('/api/manager', usersapiRouter);
+app.use('/api/friend', friendapiRouter);
+app.use('/api/login', loginapiRouter);
+app.use('/api/logout', logoutapiRouter);
+app.use('/api/register', registerapiRouter);
+app.use('/api/profile', profileapiRouter);
+app.use('/api/chat', chatapiRouter);
+app.use('/api/community', communityapiRouter);
+app.use('/api/message', messageapiRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
