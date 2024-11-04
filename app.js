@@ -80,7 +80,7 @@ app.use('/message', messagewebRouter);
 
 // app.use api
 app.use('/api', indexapiRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
-app.use('/api/manager', usersapiRouter);
+app.use('/api/user', usersapiRouter);
 app.use('/api/friend', friendapiRouter);
 app.use('/api/login', loginapiRouter);
 app.use('/api/logout', logoutapiRouter);

@@ -44,11 +44,8 @@ exports.handleLogin = async (req, res) => {
 
     try {
         let user;
-        if (IsEmail(username)) {
-            user = await User.findOne({ email: username });
-        } else {
-            user = await User.findOne({ username });
-        }
+        
+        user = await User.findOne({ email: username });
         
         if (user) {
             if (user.role == 'user') {
@@ -113,22 +110,27 @@ exports.handleLogin = async (req, res) => {
 };
 
 exports.handleRegister = async (req, res) => {
-    const { username, email, phone, password, confirmPassword } = req.body;
-
+    const { username, email, phone, password } = req.body;
+    console.log(username);
     try {
-        if( password.length <= 8 || confirmPassword.length <= 8) {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username or Email already exists' });
+        }
+        const isEmail = await IsEmail(email);
+        if (!isEmail) {
+            return res.status(400).json({ message: 'Email invalid' });
+        }
+        const existingPhone = await User.findOne({ phone });
+        if (existingPhone) {
+            return res.status(400).json({ message: 'Phone number already exists' });
+        }
+        if( password.length <= 8) {
             return res.status(400).json({ message: 'Your password is short' });
         }
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/;
         if (!passwordRegex.test(password)) {
             return res.status(400).json({ message: 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character.' });
-        }
-        if( password !== confirmPassword ) {
-            return res.status(400).json({ message: 'Your passwords do not match' });
-        }
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Username or Email already exists' });
         }
         const hashedPassword = await bcrypt.hash(password, 10);
         const newUser = new User({ username, email, phone, password: hashedPassword });
@@ -136,9 +138,9 @@ exports.handleRegister = async (req, res) => {
         await newUser.save();
 
         if (!req.session) req.session = {};
-        req.session.user = { username: newUser.username, password: newUser.password, avatar: newUser.avatar };
+        req.session.user = { username: newUser.username, password: newUser.password, avatar: newUser.avatar, email: newUser.email };
 
-        return res.status(201).json({ message: 'Registration successful', user: req.session.user });
+        return res.status(201).json({ message: 'Registration successful', user: req.session.user});
     } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).json({ message: 'Error during registration' });
@@ -175,3 +177,21 @@ exports.finduser = async (req,res) => {
         return res.status(500).json({ message: 'Error during registration' });
     }
 };
+
+exports.getUser = async (req,res) => {
+    try {
+        const {email} = req.params.email;
+        const user = await User.findOne(email);
+        if(user) {
+            const userReturn = {
+                username: user.username,
+                avatar: user.avatar,
+                email: user.email,
+            };
+            return res.status(200).json(userReturn);
+        }
+    } catch (error) {
+        console.log('Get user error:', error.message);
+        return res.status(500).json(error);
+    }
+}
