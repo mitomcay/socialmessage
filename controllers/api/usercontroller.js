@@ -9,6 +9,9 @@ function IsEmail(email) {
 
 exports.showLoginPage = (req, res) => {
     try {
+        if (req.session.userId) {
+            return res.status(400).json({ message: 'Bạn đã đăng nhập, vui lòng đăng xuất trước khi tiếp tục.' });
+        }
         return res.status(400).json({ message: 'Please log in to access' });
     } catch (error) {
         console.error('Login error:', error);
@@ -23,9 +26,7 @@ exports.showRegisterPage = (req, res) => {
 const loginAttempts = {};
 
 exports.handleLogin = async (req, res) => {
-    if (req.session.userId) {
-        return res.status(400).json({ message: 'Bạn đã đăng nhập, vui lòng đăng xuất trước khi tiếp tục.' });
-    }
+    
 
     const { username, password } = req.body;
     const currentTime = Date.now();

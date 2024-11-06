@@ -1,13 +1,17 @@
 const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
+const message = require('../../models/message/message');
 
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
 }
 
-exports.showLoginPage = (req, res) => {
+exports.showLoginPage = async (req, res) => {
     try {
+        if (req.session.userId) {
+            return res.redirect('/'); // Redirect nếu đã đăng nhập
+        }
         return res.status(200).render('login', { message: 'Please log in to access' });
     } catch (error) {
         console.error('Login error:', error);
@@ -15,16 +19,13 @@ exports.showLoginPage = (req, res) => {
     }
 };
 
-exports.showRegisterPage = (req, res) => {
-    res.status(200).render('register', { title: 'Register', error: req.query.error || null });
+exports.showRegisterPage = async (req, res) => {
+    return res.status(200).render('register', { title: 'Register', error: req.query.error || null });
 };
 
 const loginAttempts = {};
 
 exports.handleLogin = async (req, res) => {
-    if (req.session.userId) {
-        return res.redirect('/'); // Redirect nếu đã đăng nhập
-    }
 
     const { username, password } = req.body;
     const currentTime = Date.now();
@@ -55,8 +56,10 @@ exports.handleLogin = async (req, res) => {
                 delete loginAttempts[username];
 
                 req.session.userId = user._id;
-                req.session.user = { username: user.username };
-                return res.redirect('/'); // Redirect đến trang dashboard hoặc trang chính
+                req.session.user = { username: user.username, password: user.password };
+                req.session.message = 'Access granted!';
+                await req.session.save(); // Ensure the session is saved before redirecting
+                return res.render('index', {message: user.username});
             } else {
                 // Cập nhật số lần thử đăng nhập không thành công
                 if (!loginAttempts[username]) {
@@ -98,9 +101,11 @@ exports.handleRegister = async (req, res) => {
         await newUser.save();
 
         req.session.userId = newUser._id;
-        req.session.user = { username: newUser.username };
+        req.session.user = { username: newUser.username, password: newUser.password };
 
-        return res.redirect('/'); // Redirect đến trang dashboard hoặc trang chính
+        res.render('index', {
+            message: 'access congratulation',
+        });
     } catch (error) {
         console.error('Registration error:', error);
         return res.status(500).render('error', { message: 'Error during registration' });

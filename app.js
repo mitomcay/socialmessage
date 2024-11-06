@@ -11,6 +11,8 @@ const session = require('express-session');
 const passport = require('./config/passport-config');
 const cors = require('cors');
 
+const MongoStore = require('connect-mongo');
+
 // routes cho web
 var indexwebRouter = require('./routes/web/index');
 var userswebRouter = require('./routes/web/users');
@@ -53,13 +55,17 @@ app.use(cookieParser());
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(session({
+  store: MongoStore.create({
+    mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB
+    collectionName: 'sessions' // Tên collection lưu session
+  }),
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
   resave: false,
   saveUninitialized: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie bảo mật trong môi trường production (HTTPS)
     httpOnly: true, // Bảo vệ cookie khỏi các tấn công XSS
-    maxAge: 60000 // Thời gian sống của session cookie (ví dụ: 60 giây)
+    maxAge: 50* 60 * 1000 // Thời gian sống của session cookie (ví dụ: 60 giây)
   }
 }));
 

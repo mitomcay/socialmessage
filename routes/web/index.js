@@ -14,9 +14,7 @@ router.get('/', authMiddleware, async (req, res) => {
         }
       
         res.render('index', {
-            message: 'access congratulation',
-            user: req.session.user,
-            userid: req.session.userId,
+            message: req.session.user.username,
             avatar: user.avatar // Đường dẫn ảnh đại diện
         });
     } catch (error) {
