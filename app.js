@@ -65,7 +65,7 @@ app.use(session({
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie bảo mật trong môi trường production (HTTPS)
     httpOnly: true, // Bảo vệ cookie khỏi các tấn công XSS
-    maxAge: 50* 60 * 1000 // Thời gian sống của session cookie (ví dụ: 60 giây)
+    maxAge:  1000 // Thời gian sống của session cookie (ví dụ: 60 giây)
   }
 }));
 
@@ -86,7 +86,7 @@ app.use('/message', messagewebRouter);
 
 // app.use api
 app.use('/api', indexapiRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
-app.use('/api/manager', usersapiRouter);
+app.use('/api/user', usersapiRouter);
 app.use('/api/friend', friendapiRouter);
 app.use('/api/login', loginapiRouter);
 app.use('/api/logout', logoutapiRouter);

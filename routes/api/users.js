@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var bcrypt = require('bcrypt');
 var authMiddleware = require('../../middlewares/api/authMiddleware');
+var userController = require('../../controllers/api/usercontroller');
 var User = require('../../models/user/users');
 
 // GET manager page
@@ -65,3 +66,6 @@ router.post('/update-user/:id', authMiddleware, async (req, res) => {
 });
 
 module.exports = router;
+
+// Route lấy thông tin người dùng(email, username, avatar)
+router.get('/:email', authMiddleware, userController.getUser)
