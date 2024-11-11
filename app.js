@@ -60,12 +60,12 @@ app.use(session({
     collectionName: 'sessions' // Tên collection lưu session
   }),
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
-  resave: false,
+  resave: true,
   saveUninitialized: true,
   cookie: {
     secure: process.env.NODE_ENV === 'production', // Chỉ sử dụng cookie bảo mật trong môi trường production (HTTPS)
     httpOnly: true, // Bảo vệ cookie khỏi các tấn công XSS
-    maxAge:  1000 // Thời gian sống của session cookie (ví dụ: 60 giây)
+    maxAge:  1000 * 60 * 60 * 24 * 7// Thời gian sống của session cookie (ví dụ: 60 giây)
   }
 }));
 

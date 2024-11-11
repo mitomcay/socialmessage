@@ -6,20 +6,7 @@ var userController = require('../../controllers/api/usercontroller');
 var User = require('../../models/user/users');
 
 // GET manager page
-router.get('/', authMiddleware, async (req, res) => {
-    try {
-        const users = await User.find();
-        const loggedInUserId = req.session.userId;
-        console.log(loggedInUserId);
-        res.status(200).json({ 
-            message: 'accessed',
-            users: users,
-            loggedInUserId: loggedInUserId
-        });
-    } catch (error) {
-        res.status(500).send('Internal Server Error');
-    }
-});
+router.get('/', authMiddleware, userController.currentUser);
 
 // POST route (xử lý khi thêm mới người dùng)
 router.post('/', authMiddleware, async (req, res) => {
@@ -65,7 +52,7 @@ router.post('/update-user/:id', authMiddleware, async (req, res) => {
     }
 });
 
-module.exports = router;
-
 // Route lấy thông tin người dùng(email, username, avatar)
-router.get('/:email', authMiddleware, userController.getUser)
+router.get('/people/:email', authMiddleware, userController.getUser)
+
+module.exports = router;
