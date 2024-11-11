@@ -3,13 +3,83 @@ const Friend = require('../../models/user/userfriends');
 const Follow = require('../../models/user/userfollows'); 
 const chat = require('../../models/chat/chat');
 const chatmember = require('../../models/chat/chatmember');
+const message = require('../../models/message/message');
+const { getBaseURL } = require('../../lib/BaseURL');
 
+// danh sách chưa kết bạn bạn bè
+exports.friendSuggestions = async (req, res) => {
+    try {
+        const baseUrl = await getBaseURL(req);
+        const userId = req.session.userId;
+        
+        // Bước 1: Lấy danh sách bạn bè của userId
+        const listFriends = await Friend.find({  $or: [{ User1: userId }, { User2: userId }] });
+
+        // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
+        const excludeIds = listFriends.filter(friend => 
+            friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
+        ).map(friend => friend.id);
+
+        // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
+        const otherFriends = await User.aggregate([
+            { $match: { _id: { $nin: excludeIds } } }, // loại trừ những người có id trong excludeIds
+            { $sample: { size: 20 } }, // giới hạn số lượng
+            { $project: { email: 1, username: 1, avatar: { $concat: [ baseUrl, '$avatar' ] } } } // giá trị trả về
+        ]);
+
+        // trả về danh sách chưa kết bạn
+        return res.status(200).json(otherFriends);
+
+    } catch (error) {
+        console.log('get friend suggettions error:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+
+// Tìm kiếm bạn bè
+exports.findFriend = async (req, res) => {
+    try {
+        const userId = req.session.userId;        
+        const keyword  = req.params.search;
+        
+        // Bước 1: Lấy danh sách bạn bè của userId
+        const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
+
+        // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
+        const excludeIds = listFriends.filter(friend => 
+            friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
+        ).map(friend => friend.id);
+
+        // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
+        const Friends = await User.aggregate([
+            { $match: { _id: { $in: excludeIds } } }, // loại trừ những người có id trong excludeIds
+            { $project: { email: 1, username: 1, avatar: 1 } } // giá trị trả về
+        ]);
+
+        // tìm kiếm dựa theo tên
+        const search = {
+            $or: [
+                { username: { $regex: keyword, $options: 'i' } }
+            ]
+        };
+        
+        const searchFriend = await Friends.find(search);
+
+        // trả về danh sách chưa kết bạn
+        return res.status(200).json(searchFriend);
+
+    } catch (error) {
+        console.log('search friend error:', error);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+
+// danh sách bạn bè
 exports.listfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
-        console.log(userId);
         // Find the user by their ID
-        const listfriend = await Friend.findOne({ User1: userId });
+        const listfriend = await Friend.find({ User1: userId });
 
         if (!listfriend) {
             return res.status(404).json({ message: 'you have been not friend' });
@@ -23,6 +93,7 @@ exports.listfriend = async (req, res) => {
     }
 };
 
+// danh sách gửi kết bạn
 exports.listrequestfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -41,6 +112,7 @@ exports.listrequestfriend = async (req, res) => {
     }
 };
 
+// danh sách lời mời kết bạn
 exports.listorderfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
@@ -59,6 +131,7 @@ exports.listorderfriend = async (req, res) => {
     }
 };
 
+// gửi kết bạn
 exports.addfriend = async (req, res) => {
     try {
         const senderId = req.session.userId;
@@ -104,6 +177,8 @@ exports.addfriend = async (req, res) => {
     }
 };
 
+
+// chấp nhận lời mời kết bạn
 exports.acceptfriend = async (req, res) => {
     try {
         const senderId = req.session.userId;
@@ -186,6 +261,7 @@ exports.acceptfriend = async (req, res) => {
     }
 };
 
+// xóa yêu cầu kết bạn
 exports.removeFriend = async (req, res) => {
     try {
         const senderId = req.session.userId;

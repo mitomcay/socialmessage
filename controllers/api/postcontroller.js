@@ -3,6 +3,25 @@ const postlike = require('../../models/post/postlike');
 const postmedia = require('../../models/post/postmedia');
 
 
+exports.getNewPost = async (req,res) => {
+  try {
+    const userId = req.session.userId;
+    const mypost = await Post.findOne({
+      Author: userId,
+    });
+    
+    if(!mypost) {
+      res.status(400).json({ message: 'No post found'});
+    }
+
+    res.status(200).json({ message: 'List your post', post: mypost});
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+};
+
+
 exports.getpost = async (req,res) => {
   try {
     const userId = req.session.userId;

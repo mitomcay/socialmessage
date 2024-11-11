@@ -67,6 +67,18 @@ const userSchema = new mongoose.Schema({
         enum: ['admin', 'user', 'moderator'], // Các giá trị có thể có của role
         default: 'user', // Giá trị mặc định
     },
+    chats: [
+        {
+            chatId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'chat',
+            },
+            joinedAt: {
+                type: Date,
+                default: Date.now,
+            }
+        }
+    ]
 });
 
 // Tạo model từ schema

@@ -1,6 +1,10 @@
 const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
+<<<<<<< HEAD
 const { generateAccessToken, generateRefreshToken } = require('../../utils/auth');
+=======
+const { getBaseURL } = require('../../lib/BaseURL');
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
 
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +30,7 @@ exports.showRegisterPage = (req, res) => {
 
 const loginAttempts = {};
 
+<<<<<<< HEAD
 const MAX_ATTEMPTS = 5;
 const LOCK_TIME = 15 * 60 * 1000; // 15 phút
 
@@ -35,10 +40,25 @@ const checkLoginAttempts = (username) => {
     const currentTime = Date.now();
     if (loginAttempts[username]) {
         const attempts = loginAttempts[username];
+=======
+exports.handleLogin = async (req, res) => {    
+
+    const { email, password } = req.body;       
+    const baseUrl = await getBaseURL(req);
+    const currentTime = Date.now();
+    // Thiết lập giới hạn
+    const MAX_ATTEMPTS = 5;
+    const LOCK_TIME = 15 * 60 * 1000; // 15 phút
+
+    // Kiểm tra số lần thử đăng nhập
+    if (loginAttempts[email]) {
+        const attempts = loginAttempts[email];
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
         if (attempts.count >= MAX_ATTEMPTS && (currentTime - attempts.firstAttempt < LOCK_TIME)) {
             return { locked: true, remainingTime: LOCK_TIME - (currentTime - attempts.firstAttempt) };
         }
     }
+<<<<<<< HEAD
     return { locked: false };
 };
 
@@ -68,6 +88,67 @@ exports.handleLogin = async (req, res) => {
         let user;
         if (IsEmail(username)) {
             user = await User.findOne({ email: username });
+=======
+    
+    try {
+        let user;
+        
+        user = await User.findOne({ email: email });
+
+        if (user) {
+            if (user.role == 'user') {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[email];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with user', user: req.session.user, userId: req.session.userId, role: 'user' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            } else if (user.role === 'admin') {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with admin', user: req.session.user, userId: req.session.userId, role: 'admin' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            } else {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with moderator', user: req.session.user, userId: req.session.userId, role: 'moderator' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            }
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
         } else {
             user = await User.findOne({ username });
         }
@@ -116,7 +197,8 @@ exports.handleLogin = async (req, res) => {
 
 
 exports.handleRegister = async (req, res) => {
-    const { username, email, phone, password } = req.body;
+    const { username, email, phone, password } = req.body;   
+    const baseUrl = await getBaseURL(req);
     console.log(username);
     try {
         const existingUser = await User.findOne({ email });
@@ -144,7 +226,8 @@ exports.handleRegister = async (req, res) => {
         await newUser.save();
 
         if (!req.session) req.session = {};
-        req.session.user = { username: newUser.username, password: newUser.password, avatar: newUser.avatar, email: newUser.email };
+        req.session.userId = newUser._id;
+        req.session.user = { username: newUser.username, password: newUser.password, avatar: baseUrl + newUser.avatar, email: newUser.email };
 
         return res.status(201).json({ message: 'Registration successful', user: req.session.user});
     } catch (error) {
@@ -168,6 +251,29 @@ exports.logout = (req, res) => {
     }
 };
 
+exports.currentUser = async (req, res) => {
+    try {
+        const userId = req.session.userId;        
+        const baseUrl = await getBaseURL(req);
+        const user = await User.findById(userId);
+
+        if (user) {
+            const userReturn = {
+                userId: user._id,
+                username: user.username,
+                avatar: baseUrl + user.avatar,
+                email: user.email,
+            };
+            return res.status(200).json({ user: userReturn });
+        } else {
+            return res.status(404).json({ message: "User not found" });
+        }
+        
+    } catch (error) {
+        res.status(500).send('Internal Server Error');
+    }
+}
+
 exports.finduser = async (req,res) => {
     try {
         const{ name } = req.body;
@@ -184,20 +290,26 @@ exports.finduser = async (req,res) => {
     }
 };
 
-exports.getUser = async (req,res) => {
+exports.getUser = async (req, res) => {
     try {
-        const {email} = req.params.email;
-        const user = await User.findOne(email);
-        if(user) {
+        const email = req.params.email; // Directly get email from req.params   
+        const baseUrl = await getBaseURL(req);
+        // Search for the user by email
+        const user = await User.findOne({ email });
+        console.log(user);
+        if (user) {
             const userReturn = {
+                userId: user._id,
                 username: user.username,
-                avatar: user.avatar,
+                avatar: baseUrl + user.avatar,
                 email: user.email,
             };
-            return res.status(200).json(userReturn);
+            return res.status(200).json({ user: userReturn });
+        } else {
+            return res.status(404).json({ message: "User not found" });
         }
     } catch (error) {
         console.log('Get user error:', error.message);
-        return res.status(500).json(error);
+        return res.status(500).json({ message: error.message });
     }
-}
+};

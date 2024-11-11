@@ -2,7 +2,7 @@ const chat = require('../../models/chat/chat');
 const chatmember = require('../../models/chat/chatmember');
 const User = require('../../models/user/users');
 
-exports.getchat = async (req, res) => {
+exports.getAllchat = async (req, res) => {
   try {
       const userId = req.session.userId;
 
@@ -19,9 +19,28 @@ exports.getchat = async (req, res) => {
       if (!foundChat) {
           return res.status(400).json({ message: "No chat found" });
       }
-
+      
       // Send success response with chat name
-      res.status(200).json({ message: "Success", chatname: foundChat.name, chatid: foundChat._id });
+      res.status(200).json({ message: "Success", chatname: foundChat.name, chatid: foundChat._id, isGroup: foundChat.isGroup});
+
+  } catch (error) {
+      res.status(500).json({ message: "Error: " + error.message });
+  }
+};
+
+exports.getchat = async (req, res) => {
+  try {
+      const chatId = req.session.chatId;
+
+      // Find the chat by the chat ID in chatmember
+      const foundChat = await chat.findById(chatId);
+
+      if (!foundChat) {
+          return res.status(400).json({ message: "No chat found" });
+      }
+      
+      // Send success response with chat name
+      res.status(200).json({ message: "Success", chatname: foundChat.name, chatid: foundChat._id, isGroup: foundChat.isGroup, chatIcon: foundChat.Chatpicture});
 
   } catch (error) {
       res.status(500).json({ message: "Error: " + error.message });
