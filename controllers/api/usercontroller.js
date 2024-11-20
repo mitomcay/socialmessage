@@ -1,6 +1,10 @@
 const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
+<<<<<<< HEAD
+const { generateAccessToken, generateRefreshToken } = require('../../utils/auth');
+=======
 const { getBaseURL } = require('../../lib/BaseURL');
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
 
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +30,17 @@ exports.showRegisterPage = (req, res) => {
 
 const loginAttempts = {};
 
+<<<<<<< HEAD
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 15 * 60 * 1000; // 15 phút
+
+// Đối tượng lưu trữ thông tin về số lần thử đăng nhập
+
+const checkLoginAttempts = (username) => {
+    const currentTime = Date.now();
+    if (loginAttempts[username]) {
+        const attempts = loginAttempts[username];
+=======
 exports.handleLogin = async (req, res) => {    
 
     const { email, password } = req.body;       
@@ -38,10 +53,42 @@ exports.handleLogin = async (req, res) => {
     // Kiểm tra số lần thử đăng nhập
     if (loginAttempts[email]) {
         const attempts = loginAttempts[email];
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
         if (attempts.count >= MAX_ATTEMPTS && (currentTime - attempts.firstAttempt < LOCK_TIME)) {
-            return res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
+            return { locked: true, remainingTime: LOCK_TIME - (currentTime - attempts.firstAttempt) };
         }
     }
+<<<<<<< HEAD
+    return { locked: false };
+};
+
+const handleFailedLogin = (username) => {
+    const currentTime = Date.now();
+    if (!loginAttempts[username]) {
+        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+    }
+    loginAttempts[username].count++;
+};
+
+const handleSuccessfulLogin = (username) => {
+    // Reset login attempts on successful login
+    delete loginAttempts[username];
+};
+
+exports.handleLogin = async (req, res) => {
+    const { username, password } = req.body;
+
+    // Kiểm tra số lần thử đăng nhập
+    const { locked, remainingTime } = checkLoginAttempts(username);
+    if (locked) {
+        return res.status(429).json({ message: `Too many login attempts. Please try again later. Retry in ${Math.ceil(remainingTime / 1000)} seconds.` });
+    }
+
+    try {
+        let user;
+        if (IsEmail(username)) {
+            user = await User.findOne({ email: username });
+=======
     
     try {
         let user;
@@ -101,14 +148,53 @@ exports.handleLogin = async (req, res) => {
                     return res.status(401).json({ message: 'Incorrect password' });
                 }
             }
+>>>>>>> 99881beae2a46b54da04d2015bcd304768cf53dd
         } else {
+            user = await User.findOne({ username });
+        }
+
+        if (!user) {
             return res.status(401).json({ message: "User not found" });
         }
+
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) {
+            handleFailedLogin(username); // Cập nhật lần thử đăng nhập không thành công
+            return res.status(401).json({ message: 'Incorrect password' });
+        }
+
+        handleSuccessfulLogin(username); // Đặt lại số lần thử đăng nhập sau khi đăng nhập thành công
+
+        req.session.userId = user._id;
+        req.session.user = { username: user.username, password: user.password };
+
+        const accessToken = generateAccessToken(user);
+        const refreshToken = generateRefreshToken(user);
+        
+        res.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: true, // Cần set true khi chạy trên HTTPS
+            sameSite: 'Strict',
+          });
+
+        const role = user.role || 'user'; // Default to 'user' role
+        console.log( `Login success with ${role}`,
+            req.session.user,
+            req.session.userId,
+            role,
+            accessToken);
+        return res.status(200).json({
+            message: `Login success with ${role}`,
+            role: role,
+            accessToken
+        });
+
     } catch (error) {
         console.error('Login error:', error);
         return res.status(500).json({ message: error.message });
     }
 };
+
 
 exports.handleRegister = async (req, res) => {
     const { username, email, phone, password } = req.body;   
