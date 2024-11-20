@@ -53,6 +53,6 @@ router.post('/update-user/:id', authMiddleware, async (req, res) => {
 });
 
 // Route lấy thông tin người dùng(email, username, avatar)
-router.get('/people/:email', authMiddleware, userController.getUser)
+router.get('/people/:userId', authMiddleware, userController.getUser)
 
 module.exports = router;
