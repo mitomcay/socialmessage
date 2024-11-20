@@ -15,7 +15,7 @@ const userfollowsschema = mongoose.Schema({
     },
     Status:{
         type: String,
-        enum: ['Pending', 'Accepted'], // Các giá trị có thể có của role
+        enum: ['Pending', 'Accepted', 'Declined'], // Các giá trị có thể có của role
         default: 'Pending', // Giá trị mặc định
     },
 });

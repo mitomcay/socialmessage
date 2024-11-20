@@ -206,11 +206,10 @@ exports.finduser = async (req,res) => {
 
 exports.getUser = async (req, res) => {
     try {
-        const email = req.params.email; // Directly get email from req.params   
+        const userId = req.params.userId; // Directly get email from req.params 
         const baseUrl = await getBaseURL(req);
         // Search for the user by email
-        const user = await User.findOne({ email });
-        console.log(user);
+        const user = await User.findById(userId);
         if (user) {
             const userReturn = {
                 userId: user._id,

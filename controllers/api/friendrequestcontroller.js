@@ -1,6 +1,6 @@
 const User = require('../../models/user/users');
 const Friend = require('../../models/user/userfriends');
-const Follow = require('../../models/user/userfollows'); 
+const Follow = require('../../models/user/userfollows');
 const chat = require('../../models/chat/chat');
 const chatmember = require('../../models/chat/chatmember');
 const message = require('../../models/message/message');
@@ -11,12 +11,12 @@ exports.friendSuggestions = async (req, res) => {
     try {
         const baseUrl = await getBaseURL(req);
         const userId = req.session.userId;
-        
+
         // Bước 1: Lấy danh sách bạn bè của userId
-        const listFriends = await Friend.find({  $or: [{ User1: userId }, { User2: userId }] });
+        const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
-        const excludeIds = listFriends.filter(friend => 
+        const excludeIds = listFriends.filter(friend =>
             friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
         ).map(friend => friend.id);
 
@@ -24,7 +24,7 @@ exports.friendSuggestions = async (req, res) => {
         const otherFriends = await User.aggregate([
             { $match: { _id: { $nin: excludeIds } } }, // loại trừ những người có id trong excludeIds
             { $sample: { size: 20 } }, // giới hạn số lượng
-            { $project: { email: 1, username: 1, avatar: { $concat: [ baseUrl, '$avatar' ] } } } // giá trị trả về
+            { $project: { email: 1, username: 1, avatar: { $concat: [baseUrl, '$avatar'] } } } // giá trị trả về
         ]);
 
         // trả về danh sách chưa kết bạn
@@ -39,14 +39,14 @@ exports.friendSuggestions = async (req, res) => {
 // Tìm kiếm bạn bè
 exports.findFriend = async (req, res) => {
     try {
-        const userId = req.session.userId;        
-        const keyword  = req.params.search;
-        
+        const userId = req.session.userId;
+        const keyword = req.params.keyword;
+
         // Bước 1: Lấy danh sách bạn bè của userId
         const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
-        const excludeIds = listFriends.filter(friend => 
+        const excludeIds = listFriends.filter(friend =>
             friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
         ).map(friend => friend.id);
 
@@ -59,10 +59,11 @@ exports.findFriend = async (req, res) => {
         // tìm kiếm dựa theo tên
         const search = {
             $or: [
-                { username: { $regex: keyword, $options: 'i' } }
+                { username: { $regex: keyword, $options: 'i' } },
+                { email: { $regex: keyword, $options: 'i' } }
             ]
         };
-        
+
         const searchFriend = await Friends.find(search);
 
         // trả về danh sách chưa kết bạn
@@ -86,45 +87,54 @@ exports.listfriend = async (req, res) => {
         }
 
         // Render trang danh sách bạn bè
-        res.status(200).json({ message: 'List of Friends', friends: listfriend, loggedInUserId: userId });
+        res.status(200).json(listfriend);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// danh sách gửi kết bạn
+// danh sách lời mời kết bạn đã gửi
 exports.listrequestfriend = async (req, res) => {
     try {
+        const baseUrl = await getBaseURL(req);
         const userId = req.session.userId;
-        console.log(userId);
         // Find the user by their ID
-        const listrequest = await Follow.findOne({Sender: userId});
-
+        const listrequest = await Follow.find({ Sender: userId });
         if (!listrequest) {
             return res.status(404).json({ message: 'Ban chua gui ket ban voi ai' });
         }
+        // tạo mảng chứa danh sách userId lời mời kết bạn đã gửi:
+        const excludeIds = listrequest.map(item => item.Accept);
+        const requestFriends = await User.aggregate([
+            { $match: { _id: { $in: excludeIds } } },
+            { $project: { email: 1, username: 1, avatar: { $concat: [baseUrl, '$avatar'] } } }
+        ])
         // Render trang danh sách bạn bè
-        res.status(200).json({ message: 'Danh sach nhung nguoi da gui ket ban', friends: listrequest, loggedInUserId: userId });
+        res.status(200).json(requestFriends);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// danh sách lời mời kết bạn
+// danh sách lời mời kết bạn đã nhận
 exports.listorderfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
         console.log(userId);
         // Find the user by their ID
-        const listorder = await Follow.findOne({Accept: userId});
-
+        const listorder = await Follow.find({
+            Accept: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
+        console.log(listorder);
         if (!listorder) {
             return res.status(404).json({ message: 'Ban khong co loi moi ket ban nao' });
         }
+        const orders = listorder.map(order => order.Sender);
         // Render trang danh sách bạn bè
-        res.status(200).json({ message: 'Danh sach nhung loi moi ket ban', friends: listorder, loggedInUserId: userId });
+        res.status(200).json(orders);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -177,6 +187,35 @@ exports.addfriend = async (req, res) => {
     }
 };
 
+// hủy lời mời kết bạn 
+exports.removeAddFriend = async (req, res) => {
+    try {
+        const senderId = req.session.userId;
+        const { receiverId } = req.body;
+        console.log(senderId, receiverId);
+        if (senderId && receiverId) {
+            const existingRequest = await Follow.findOne({
+                Sender: senderId,
+                Accept: receiverId
+            });
+            if (!existingRequest) {
+                return res.status(400).json({ message: 'No friend requests sent yet' });
+            }
+            else {
+                const isDelete = await Follow.deleteOne(existingRequest);
+                if (isDelete) {
+                    return res.status(200).json({ message: 'Friend request deleted' });
+                }
+                else {
+                    return res.status(500).json({ message: 'Delete failed friend request' })
+                }
+            }
+        }
+    } catch (error) {
+        console.log('remove add friend error:', error);
+        res.status(500).json({ message: 'Server error' })
+    }
+}
 
 // chấp nhận lời mời kết bạn
 exports.acceptfriend = async (req, res) => {
@@ -218,11 +257,9 @@ exports.acceptfriend = async (req, res) => {
 
         // Tạo bạn bè mới
         const newFriend = new Friend({ User1: senderId, User2: requestId });
-        const newFriend2 = new Friend({ User2: senderId, User1: requestId });
         await newFriend.save();
-        await newFriend2.save();
 
-        friendRequest.status = 'Accepted';
+        friendRequest.Status = 'Accepted';
         await friendRequest.save();
 
         // Tạo chat mới cho cả hai người
@@ -260,8 +297,28 @@ exports.acceptfriend = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+// không chấp nhận lời mời kết bạn
+exports.declinefriend = async (res, req) => {
+    try {
+        // Tìm và cập nhật trạng thái yêu cầu kết bạn thành 'Accepted'
+        const friendRequest = await Follow.findOneAndUpdate(
+            { Sender: requestId, Accept: senderId },
+            { Status: 'Declined' }, // Cập nhật trạng thái
+            { new: true } // Trả về tài liệu sau khi cập nhật
+        );
 
-// xóa yêu cầu kết bạn
+        if (friendRequest) {
+            return res.status(200).json({ message: 'Friend request status updated' })
+        } else {
+            return res.status(404).json({ message: 'Friend request not found' })
+        }
+    } catch (error) {
+        console.error(err);
+        return res.status(500).json({ message: 'Server error' });
+    }
+}
+
+// xóa bạn bè
 exports.removeFriend = async (req, res) => {
     try {
         const senderId = req.session.userId;
