@@ -1,26 +1,57 @@
 // config/passport-config.js
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const User = require('../models/user/users');
+const bcrypt = require('bcrypt');
 
-passport.use(new GoogleStrategy({
-    clientID: 'YOUR_GOOGLE_CLIENT_ID',
-    clientSecret: 'YOUR_GOOGLE_CLIENT_SECRET',
-    callbackURL: "/auth/google/callback"
-  },
-  function(accessToken, refreshToken, profile, done) {
-    // Xử lý thông tin user lấy được từ Google và lưu vào database nếu cần
-    // Ví dụ: User.findOrCreate({ googleId: profile.id }, (err, user) => done(err, user));
-    done(null, profile);
-  }
-));
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: '342508766919-667rru6vbv12n9dg2u30r2dovknuhpnc.apps.googleusercontent.com',
+      clientSecret: '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',
+      callbackURL: '/auth/google/callback',
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email = profile.emails[0].value;
+        const name = profile.displayName;
 
-// Serialize user to session
+        // Tìm người dùng qua email
+        let user = await User.findOne({ email });
+
+        if (!user) {
+          // Nếu người dùng chưa tồn tại, tạo tài khoản mới
+          const phone = "";
+          const hashedPassword = await bcrypt.hash('default_password', 10); // Mật khẩu mặc định cho tài khoản Google
+          user = new User({
+            username: name,
+            email,
+            password: hashedPassword,
+            phone: phone // Mật khẩu mặc định
+          });
+          await user.save();
+        }
+
+        done(null, user); // Truyền người dùng qua `done`
+      } catch (error) {
+        done(error, null);
+      }
+    }
+  )
+);
+
+
 passport.serializeUser((user, done) => {
-  done(null, user);
+  done(null, user._id);
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await User.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
+  }
 });
 
 module.exports = passport;

@@ -1,53 +1,58 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Like button functionality
-    const likeButtons = document.querySelectorAll('.tweet-actions button:nth-child(3)');
-    likeButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const icon = button.querySelector('i');
-            const likesCount = button.textContent.trim().split(' ')[1];
-            if (icon.classList.contains('far')) {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
-                icon.style.color = '#e0245e';
-                button.textContent = ` ${parseInt(likesCount) + 1}`;
-            } else {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
-                icon.style.color = '';
-                button.textContent = ` ${parseInt(likesCount) - 1}`;
-            }
-        });
-    });
+// main.js
+const postsSection = document.querySelector('.posts');
+const newPostForm = document.querySelector('.new-post form');
 
-    // Retweet button functionality
-    const retweetButtons = document.querySelectorAll('.tweet-actions button:nth-child(2)');
-    retweetButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const icon = button.querySelector('i');
-            const retweetCount = button.textContent.trim().split(' ')[1];
-            if (icon.style.color !== 'rgb(23, 191, 99)') {
-                icon.style.color = '#17bf63';
-                button.textContent = ` ${parseInt(retweetCount) + 1}`;
-            } else {
-                icon.style.color = '';
-                button.textContent = ` ${parseInt(retweetCount) - 1}`;
-            }
-        });
-    });
+// Assume you have a function to fetch posts from the server
+async function fetchPosts() {
+    const response = await fetch('/posts');
+    const posts = await response.json();
+    return posts;
+}
 
-    // Tweet box character count
-    const tweetTextarea = document.querySelector('.tweet-box textarea');
-    const tweetButton = document.querySelector('.tweet-box .tweet-btn');
-    const maxChars = 280;
-
-    tweetTextarea.addEventListener('input', () => {
-        const remainingChars = maxChars - tweetTextarea.value.length;
-        if (remainingChars < 0) {
-            tweetButton.disabled = true;
-            tweetButton.style.opacity = '0.5';
-        } else {
-            tweetButton.disabled = false;
-            tweetButton.style.opacity = '1';
-        }
+// Assume you have a function to create a new post
+async function createPost(content) {
+    const response = await fetch('/posts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ content })
     });
+    const post = await response.json();
+    return post;
+}
+
+// Render posts
+async function renderPosts() {
+    const posts = await fetchPosts();
+    const postsHtml = posts.map(post => `
+        <article class="post">
+            <header>
+                <img src="${post.user.profilePicture}" alt="${post.user.name}'s profile picture">
+                <p>${post.user.name}</p>
+            </header>
+            <p>${post.content}</p>
+            <footer>
+                <p>${post.createdAt}</p>
+                <ul>
+                    <li><button><i class="fas fa-thumbs-up"></i> Like</button></li>
+                    <li><button><i class="fas fa-comment"></i> Comment</button></li>
+                    <li><button><i class="fas fa-share"></i> Share</button></li>
+                </ul>
+            </footer>
+        </article>
+    `).join('');
+    postsSection.innerHTML = postsHtml;
+}
+
+// Handle new post form submission
+newPostForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = newPostForm.querySelector('textarea').value;
+    const post = await createPost(content);
+    await renderPosts();
+    newPostForm.querySelector('textarea').value = '';
 });
+
+// Initialize
+renderPosts();

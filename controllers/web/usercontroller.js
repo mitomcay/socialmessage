@@ -2,7 +2,6 @@ const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
 const message = require('../../models/message/message');
 
-
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);

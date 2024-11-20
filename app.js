@@ -6,9 +6,8 @@ var logger = require('morgan');
 var mongoose = require('mongoose');
 var app = express();
 var favicon = require('serve-favicon');
-
-const session = require('express-session');
 const passport = require('./config/passport-config');
+const session = require('express-session');
 const cors = require('cors');
 
 const MongoStore = require('connect-mongo');
@@ -28,6 +27,7 @@ var friendwebRouter = require('./routes/web/userfriend');
 var communitywebRouter = require('./routes/web/community'); 
 var chatwebRouter = require('./routes/web/chat'); 
 var messagewebRouter = require('./routes/web/message'); 
+var googleAuthRoutes = require('./routes/web/auth/googleAuth');
 
 // routes cho mobile
 var indexapiRouter = require('./routes/api/index');
@@ -41,6 +41,7 @@ var friendapiRouter = require('./routes/api/userfriend');
 var communityapiRouter = require('./routes/api/community');
 var chatapiRouter = require('./routes/api/chat');
 var messageapiRouter = require('./routes/api/message'); 
+
 
 // app.set
 app.set('views', path.join(__dirname, 'views'));
@@ -76,6 +77,9 @@ app.use(session({
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use(express.urlencoded({ extended: true }));
+app.use('/auth', googleAuthRoutes);
 
 // app.use web
 app.use('/', indexwebRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập

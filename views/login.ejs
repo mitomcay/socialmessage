@@ -7,7 +7,7 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -15,60 +15,109 @@
             margin: 0;
         }
 
-        form {
+        .container {
             background-color: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
         }
 
         h1 {
-            text-align: center;
+            font-size: 24px;
+            color: #333;
             margin-bottom: 20px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            text-align: left;
         }
 
         label {
+            font-weight: bold;
+            color: #555;
             display: block;
             margin-bottom: 5px;
-            font-weight: bold;
         }
 
         input {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #2575fc;
+            box-shadow: 0 0 5px rgba(37, 117, 252, 0.5);
         }
 
         button {
             width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
+            padding: 12px;
+            font-size: 16px;
+            background-color: #2575fc;
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         button:hover {
-            background-color: #45a049;
+            background-color: #1b5cb8;
         }
+
         .error-message {
             font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
-            font-size: 12px;
+            font-size: 14px;
             color: red;
+            margin-top: -10px;
+            margin-bottom: 20px;
             font-weight: bold;
+        }
+
+        .google-login {
+            margin-top: 20px;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .google-login:hover {
+            background-color: #3367d6;
+        }
+
+        .register-link {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register-link a {
+            color: #2575fc;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div>
+    <div class="container">
+        <h1>Welcome Back</h1>
         <form action="/login" method="POST">
             <div class="form-group">
                 <label for="username">Username/Email:</label>
@@ -80,11 +129,13 @@
             </div>
             <% if (typeof error !== 'undefined' && error) { %>
                 <p class="error-message"><%= error %></p>
-              <% } %>
+            <% } %>
             <button type="submit">Login</button>
-            <p><a href="/register">Don't you have an account? Click here</a></p>
         </form>
+        <div class="register-link">
+            <p>Don't have an account? <a href="/register">Register here</a></p>
+        </div>
+        <button class="google-login" onclick="window.location.href='/auth/google'">Login with Google</button>
     </div>
-    
 </body>
 </html>
