@@ -7,8 +7,8 @@ const bcrypt = require('bcrypt');
 passport.use(
   new GoogleStrategy(
     {
-      clientID: '342508766919-667rru6vbv12n9dg2u30r2dovknuhpnc.apps.googleusercontent.com',
-      clientSecret: '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',
+      clientID: '',
+      clientSecret: '',
       callbackURL: '/auth/google/callback',
     },
     async (accessToken, refreshToken, profile, done) => {
