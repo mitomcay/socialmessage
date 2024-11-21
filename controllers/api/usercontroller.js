@@ -1,6 +1,10 @@
 const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
+<<<<<<< HEAD
+const { generateAccessToken, generateRefreshToken } = require('../../utils/auth');
+=======
 const { getBaseURL } = require('../../lib/BaseURL');
+>>>>>>> 0ecb9257e9ebd3c2af8b72a964169003883db694
 
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,6 +30,17 @@ exports.showRegisterPage = (req, res) => {
 
 const loginAttempts = {};
 
+<<<<<<< HEAD
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 15 * 60 * 1000; // 15 phút
+
+// Đối tượng lưu trữ thông tin về số lần thử đăng nhập
+
+const checkLoginAttempts = (username) => {
+    const currentTime = Date.now();
+    if (loginAttempts[username]) {
+        const attempts = loginAttempts[username];
+=======
 exports.handleLogin = async (req, res) => {    
 
     const { email, password } = req.body;       
@@ -38,10 +53,42 @@ exports.handleLogin = async (req, res) => {
     // Kiểm tra số lần thử đăng nhập
     if (loginAttempts[email]) {
         const attempts = loginAttempts[email];
+>>>>>>> 0ecb9257e9ebd3c2af8b72a964169003883db694
         if (attempts.count >= MAX_ATTEMPTS && (currentTime - attempts.firstAttempt < LOCK_TIME)) {
             return res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
         }
     }
+<<<<<<< HEAD
+    return { locked: false };
+};
+
+const handleFailedLogin = (username) => {
+    const currentTime = Date.now();
+    if (!loginAttempts[username]) {
+        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+    }
+    loginAttempts[username].count++;
+};
+
+const handleSuccessfulLogin = (username) => {
+    // Reset login attempts on successful login
+    delete loginAttempts[username];
+};
+
+exports.handleLogin = async (req, res) => {
+    const { username, password } = req.body;
+
+    // Kiểm tra số lần thử đăng nhập
+    const { locked, remainingTime } = checkLoginAttempts(username);
+    if (locked) {
+        return res.status(429).json({ message: `Too many login attempts. Please try again later. Retry in ${Math.ceil(remainingTime / 1000)} seconds.` });
+    }
+
+    try {
+        let user;
+        if (IsEmail(username)) {
+            user = await User.findOne({ email: username });
+=======
     
     try {
         let user;
@@ -101,6 +148,7 @@ exports.handleLogin = async (req, res) => {
                     return res.status(401).json({ message: 'Incorrect password' });
                 }
             }
+>>>>>>> 0ecb9257e9ebd3c2af8b72a964169003883db694
         } else {
             return res.status(401).json({ message: "User not found" });
         }

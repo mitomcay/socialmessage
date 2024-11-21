@@ -1,14 +1,15 @@
 var express = require('express');
 var router = express.Router();
 var authMiddleware = require('../../middlewares/web/authMiddleware');
+var axios = require('axios');
 const User = require('../../models/user/users');
 const usercontroller = require('../../controllers/web/usercontroller');
+
 
 // Route for the home page
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const user = await User.findById(req.session.userId);
-        
         if (!user) {
             return res.status(404).send('User not found');
         }

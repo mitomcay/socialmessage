@@ -8,13 +8,10 @@ exports.showprofilepages = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found!' });
         }
-        res.status(200).json({
-            message: 'Get profile success!',
-            user: {
-                username: user.username,
-                email: user.email,
-                avatar: user.avatar, // Đường dẫn ảnh đại diện
-            },
+        res.render('profile', {
+            username: user.username,
+            email: user.email,
+            avatar: user.avatar // Đường dẫn ảnh đại diện
         });
     } catch (error) {
         console.log(error);
