@@ -40,6 +40,25 @@ exports.getpost = async (req,res) => {
   }
 };
 
+exports.getUserPost = async (req,res) => {
+  try {
+    const { UserId } = req.params.userId;
+    const userPost = await Post.findOne({
+      Author: userId,
+    });
+    
+    if(!userPost) {
+      res.status(400).json({ message: 'No post found'});
+    }
+
+    res.status(200).json({ message: 'List your post', post: userPost});
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+};
+
+
 exports.pushpost = async (req,res) => {
   try {
     const userId = req.session.userId;
