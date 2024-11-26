@@ -156,7 +156,7 @@ exports.searchFriend = async (req, res) => {
         ]);
 
         // trả về danh sách chưa kết bạn
-        return res.status(200).json(friends, orderFriends, requestFriends, nonFriends);
+        return res.status(200).json({friends, orderFriends, requestFriends, nonFriends});
 
     } catch (error) {
         console.log('search friend error:', error);
