@@ -12,6 +12,7 @@ router.post('/removeAddFriend', authMiddleware, friendController.removeAddFriend
 router.post('/acceptfriend', authMiddleware,friendController.acceptfriend);
 router.post('declinefriend', authMiddleware, friendController.declinefriend)
 router.post('/removeFriend', authMiddleware, friendController.removeFriend);
-router.get('/find/:keyword', authMiddleware, friendController.findFriend);
+router.get('/search/:keyword', authMiddleware, friendController.searchFriend);
+router.get('isFriend', authMiddleware, friendController.isFriend);
 
 module.exports = router;
