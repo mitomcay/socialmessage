@@ -27,14 +27,24 @@
     <main>
         <section class="new-post">
             <h2>Create New Post</h2>
-            <form id="new-post-form" enctype="multipart/form-data">
-                <textarea id="content" name="content" placeholder="What's on your mind?" required></textarea>
-                <div class="media-upload">
-                    <input type="file" name="image" accept="image/*">
-                    <input type="file" name="video" accept="video/*">
+            <form action="/post" method="POST" enctype="multipart/form-data">
+                <div>
+                  <textarea name="content" placeholder="What's on your mind?" required></textarea>
+                </div>
+                <div>
+                  <label>Community Post</label>
+                  <input type="checkbox" name="IsCommunityPost" value="true" />
+                </div>
+                <div>
+                  <label>Upload Images</label>
+                  <input type="file" name="image" multiple accept="image/*" />
+                </div>
+                <div>
+                  <label>Upload Videos</label>
+                  <input type="file" name="video" multiple accept="video/*" />
                 </div>
                 <button type="submit">Post</button>
-            </form>
+              </form>
         </section>
 
         <section class="posts">
@@ -48,19 +58,35 @@
     <script>
         async function fetchPosts() {
             try {
-                const response = await fetch('/post/randompost'); // API endpoint
+                const response = await fetch('/post/randompost'); // Gọi API
                 const data = await response.json();
                 const postsContainer = document.querySelector('.posts');
                 postsContainer.innerHTML = '';
+
                 if (data.post && data.post.length > 0) {
                     data.post.forEach(post => {
+                        // Render từng post
+                        let mediaHTML = '';
+                        if (post.media && post.media.length > 0) {
+                            post.media.forEach(media => {
+                                if (media.media.type === 'image') {
+                                    mediaHTML += `<img src="${media.media.filePath}" alt="Post Image" style="max-width: 300px; margin: 10px;" />`;
+                                } else if (media.media.type === 'video') {
+                                    mediaHTML += `
+                                        <video controls style="max-width: 300px; margin: 10px;">
+                                            <source src="${media.media.filePath}" type="video/mp4" />
+                                        </video>`;
+                                }
+                            });
+                        }
+
                         postsContainer.innerHTML += `
                             <div class="post">
-                                <h3>${post.Author}</h3>
+                                <h3>${post.Author.username}</h3>
                                 <p>${post.content}</p>
                                 ${post.IsCommunityPost ? `<p><strong>Community Post:</strong> ${post.Community}</p>` : ''}
-                            </div>
-                        `;
+                                <div class="media">${mediaHTML}</div>
+                            </div>`;
                     });
                 } else {
                     postsContainer.innerHTML = `<p>No posts available.</p>`;
@@ -72,32 +98,6 @@
 
         window.onload = fetchPosts;
 
-        document.getElementById('new-post-form').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const formData = new FormData(this); // Using FormData to send image and video files
-            for (let pair of formData.entries()) {
-                console.log(pair[0] + ': ' + pair[1]);
-            }
-
-            try {
-                const response = await fetch("/post", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                const data = await response.json();
-                if (response.ok) {
-                    alert(`Success: ${data.message}`);
-                    fetchPosts(); // Refresh the posts
-                } else {
-                    alert(`Error:1: ${data.message}`);
-                }
-            } catch (error) {
-                alert('Error: Unable to push post.');
-                console.error('Error:', error);
-            }
-        });
     </script>
 </body>
 </html>

@@ -10,7 +10,13 @@ exports.getpost = async (req, res) => {
     const userId = req.session.userId;
     const mypost = await Post.find({
       Author: userId,
-    });
+    }).populate('Author', 'username') // Lấy thông tin tác giả
+    .populate({
+      path: 'media',
+      model: 'postmedia',
+      populate: { path: 'media', model: 'media' }, // Lấy thông tin file
+    })
+    .exec();
     
     if (!mypost) {
       return res.status(400).json({ message: 'No post found' });
@@ -25,7 +31,34 @@ exports.getpost = async (req, res) => {
 
 exports.getramdompost = async (req, res) => {
   try {
-    const mypost = await Post.aggregate([{ $sample: { size: 10 } }]);
+    const mypost = await Post.aggregate([
+      { $sample: { size: 10 } }, // Lấy ngẫu nhiên 10 bài post
+      {
+        $lookup: {
+          from: 'users', // Tên collection của User
+          localField: 'Author',
+          foreignField: '_id',
+          as: 'AuthorDetails',
+        },
+      },
+      { $unwind: '$AuthorDetails' }, // Giải phóng mảng AuthorDetails
+      {
+        $lookup: {
+          from: 'postmedias', // Tên collection của PostMedia
+          localField: '_id',
+          foreignField: 'Post',
+          as: 'media',
+        },
+      },
+      {
+        $lookup: {
+          from: 'medias', // Tên collection của Media
+          localField: 'media.media',
+          foreignField: '_id',
+          as: 'mediaFiles',
+        },
+      },
+    ]);
     
     if (!mypost) {
       return res.status(400).json({ message: 'No post found' });
@@ -47,52 +80,85 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({
+  storage: storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/png', 'video/mp4'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPG, PNG, and MP4 are allowed.'));
+    }
+  },
+})
 
 exports.pushpost = async (req, res) => {
   try {
-    const userId = req.session.userId;
-    const content = req.body.content;  // Data from form
-    const IsCommunityPost = req.query.IsCommunityPost === 'true'; // From query params
-    const image = req.files?.image;
-    const video = req.files?.video;
+    const userId = req.session.userId; // Lấy ID người dùng từ session
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Please log in' });
+    }
 
-    console.log('Content:', content);
-    console.log('Image:', image);
-    console.log('Video:', video);
+    upload(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ error: err.message });
+      }
 
-    // Create the new post
-    const newPost = new Post({
-      Author: userId,
-      content: content,
-      IsCommunityPost: IsCommunityPost,
+      const { content } = req.body;
+      const isCommunityPost = req.query.IsCommunityPost === 'true';
+      const communityId = req.body.communityId || null; // ID cộng đồng nếu có
+
+      if (!content || content.trim() === '') {
+        return res.status(400).json({ error: 'Content is required' });
+      }
+
+      // Tạo bài post mới
+      const newPost = new Post({
+        Author: userId,
+        Community: isCommunityPost ? communityId : null,
+        content: content,
+        IsCommunityPost: isCommunityPost,
+      });
+
+      await newPost.save();
+
+      // Lưu thông tin media vào bảng PostMedia
+      const mediaIds = [];
+      const saveMedia = async (files, type) => {
+        for (const file of files) {
+          const media = new Media({
+            type: type,
+            filePath: file.path,
+          });
+          await media.save();
+
+          const postMedia = new PostMedia({
+            Post: newPost._id,
+            media: media._id,
+            Community: isCommunityPost ? communityId : null,
+          });
+          await postMedia.save();
+
+          mediaIds.push(media._id);
+        }
+      };
+
+      // Lưu từng loại media nếu có
+      await saveMedia(req.files?.image || [], 'image');
+      await saveMedia(req.files?.video || [], 'video');
+
+      // Cập nhật media vào post
+      newPost.media = mediaIds;
+      await newPost.save();
+
+      return res.render('index');
     });
-
-    // Save media files if provided
-    if (image) {
-      const media = new Media({
-        type: 'image',
-        filePath: image[0].path, // Fix: Ensure it's an array since it's an object from `upload.fields()`
-      });
-      await media.save();
-      newPost.media = media._id;
-    }
-
-    if (video) {
-      const media = new Media({
-        type: 'video',
-        filePath: video[0].path, // Fix: Ensure it's an array since it's an object from `upload.fields()`
-      });
-      await media.save();
-      newPost.media = media._id;
-    }
-
-    await newPost.save();
-    return res.status(200).json({ message: 'Post created successfully' });
-
   } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+    console.error('Error creating post:', error);
+    return res.status(500).json({
+      error: 'An error occurred while creating the post',
+      details: error.message,
+    });
   }
 };
 
