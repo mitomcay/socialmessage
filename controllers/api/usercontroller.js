@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const User = require('../../models/user/users');
 const { generateAccessToken, generateRefreshToken } = require('../../utils/auth');
+const { getBaseURL } = require('../../lib/BaseURL');
 
 function IsEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,48 +27,81 @@ exports.showRegisterPage = (req, res) => {
 
 const loginAttempts = {};
 
-const MAX_ATTEMPTS = 5;
-const LOCK_TIME = 15 * 60 * 1000; // 15 phút
+exports.handleLogin = async (req, res) => {    
 
-// Đối tượng lưu trữ thông tin về số lần thử đăng nhập
-
-const checkLoginAttempts = (username) => {
+    const { email, password } = req.body;       
+    const baseUrl = await getBaseURL(req);
     const currentTime = Date.now();
-    if (loginAttempts[username]) {
-        const attempts = loginAttempts[username];
+    // Thiết lập giới hạn
+    const MAX_ATTEMPTS = 5;
+    const LOCK_TIME = 15 * 60 * 1000; // 15 phút
+
+    // Kiểm tra số lần thử đăng nhập
+    if (loginAttempts[email]) {
+        const attempts = loginAttempts[email];
         if (attempts.count >= MAX_ATTEMPTS && (currentTime - attempts.firstAttempt < LOCK_TIME)) {
             return res.status(429).json({ message: 'Too many login attempts. Please try again later.' });
         }
     }
-    return { locked: false };
-};
-
-const handleFailedLogin = (username) => {
-    const currentTime = Date.now();
-    if (!loginAttempts[username]) {
-        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
-    }
-    loginAttempts[username].count++;
-};
-
-const handleSuccessfulLogin = (username) => {
-    // Reset login attempts on successful login
-    delete loginAttempts[username];
-};
-
-exports.handleLogin = async (req, res) => {
-    const { username, password } = req.body;
-
-    // Kiểm tra số lần thử đăng nhập
-    const { locked, remainingTime } = checkLoginAttempts(username);
-    if (locked) {
-        return res.status(429).json({ message: `Too many login attempts. Please try again later. Retry in ${Math.ceil(remainingTime / 1000)} seconds.` });
-    }
-
+    
     try {
         let user;
-        if (IsEmail(username)) {
-            user = await User.findOne({ email: username });
+        
+        user = await User.findOne({ email: email });
+
+        if (user) {
+            if (user.role == 'user') {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[email];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with user', user: req.session.user, userId: req.session.userId, role: 'user' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            } else if (user.role === 'admin') {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with admin', user: req.session.user, userId: req.session.userId, role: 'admin' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            } else {
+                const match = await bcrypt.compare(password, user.password);
+                if (match) {
+                    // Đặt lại số lần thử đăng nhập thành công
+                    delete loginAttempts[username];
+
+                    req.session.userId = user._id;
+                    req.session.user = { username: user.username, password: user.password, avatar: baseUrl + user.avatar, email: user.email };
+                    return res.status(200).json({ message: 'Login success with moderator', user: req.session.user, userId: req.session.userId, role: 'moderator' });
+                } else {
+                    // Cập nhật số lần thử đăng nhập không thành công
+                    if (!loginAttempts[username]) {
+                        loginAttempts[username] = { count: 0, firstAttempt: currentTime };
+                    }
+                    loginAttempts[username].count++;
+                    return res.status(401).json({ message: 'Incorrect password' });
+                }
+            }
         } else {
             return res.status(401).json({ message: "User not found" });
         }

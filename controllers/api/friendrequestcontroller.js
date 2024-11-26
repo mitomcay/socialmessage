@@ -14,15 +14,25 @@ exports.friendSuggestions = async (req, res) => {
 
         // Bước 1: Lấy danh sách bạn bè của userId
         const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
+        const listrequest = await Follow.find({
+            Sender: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
+        // lấy danh sách người dùng kết bạn đã nhận
+        const listorder = await Follow.find({
+            Accept: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
         const excludeIds = listFriends.filter(friend =>
             friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
         ).map(friend => friend.id);
+        
 
         // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
         const otherFriends = await User.aggregate([
-            { $match: { _id: { $nin: excludeIds } } }, // loại trừ những người có id trong excludeIds
+            { $match: { _id: { $nin: excludeIds, $nin: listrequest, $nin: listorder } } }, // loại trừ những người có id trong excludeIds
             { $sample: { size: 20 } }, // giới hạn số lượng
             { $project: { email: 1, username: 1, avatar: { $concat: [baseUrl, '$avatar'] } } } // giá trị trả về
         ]);
@@ -37,37 +47,116 @@ exports.friendSuggestions = async (req, res) => {
 }
 
 // Tìm kiếm bạn bè
-exports.findFriend = async (req, res) => {
+exports.searchFriend = async (req, res) => {
     try {
+        
+        const baseUrl = await getBaseURL(req);
         const userId = req.session.userId;
         const keyword = req.params.keyword;
 
         // Bước 1: Lấy danh sách bạn bè của userId
         const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
+        // lấy danh sách lời mời kết bạn đã gửi
+        const listrequest = await Follow.find({
+            Sender: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
+        // lấy danh sách người dùng kết bạn đã nhận
+        const listorder = await Follow.find({
+            Accept: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
         const excludeIds = listFriends.filter(friend =>
             friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
         ).map(friend => friend.id);
 
-        // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
-        const Friends = await User.aggregate([
-            { $match: { _id: { $in: excludeIds } } }, // loại trừ những người có id trong excludeIds
-            { $project: { email: 1, username: 1, avatar: 1 } } // giá trị trả về
+        const requestIds = listrequest.map(fl => fl.Accept);
+        const orderIds = listorder.map(fl => fl.Sender);
+
+        // Bước 3: Tìm những người trong excludeIds
+        const friends = await User.aggregate([
+            {
+                $match: {
+                    _id: { $in: excludeIds }, // Các id trong excludeIds
+                    $or: [
+                        { email: { $regex: keyword, $options: 'i' } }, // Tìm kiếm không phân biệt hoa thường trong email
+                        { username: { $regex: keyword, $options: 'i' } } // Tìm kiếm không phân biệt hoa thường trong username
+                    ]
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    username: 1,
+                    avatar: { $concat: [baseUrl, '$avatar'] }
+                }
+            },
         ]);
 
         // tìm kiếm dựa theo tên
-        const search = {
-            $or: [
-                { username: { $regex: keyword, $options: 'i' } },
-                { email: { $regex: keyword, $options: 'i' } }
-            ]
-        };
+        const orderFriends = await User.aggregate([
+            {
+                $match: {
+                    _id: { $in: orderIds }, // Loại trừ các id trong excludeIds
+                    $or: [
+                        { email: { $regex: keyword, $options: 'i' } }, // Tìm kiếm không phân biệt hoa thường trong email
+                        { username: { $regex: keyword, $options: 'i' } } // Tìm kiếm không phân biệt hoa thường trong username
+                    ]
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    username: 1,
+                    avatar: { $concat: [baseUrl, '$avatar'] }
+                }
+            },
+        ]);
 
-        const searchFriend = await Friends.find(search);
+        // tìm kiếm dựa theo tên
+        const requestFriends = await User.aggregate([
+            {
+                $match: {
+                    _id: { $in: requestIds }, // Loại trừ các id trong excludeIds
+                    $or: [
+                        { email: { $regex: keyword, $options: 'i' } }, // Tìm kiếm không phân biệt hoa thường trong email
+                        { username: { $regex: keyword, $options: 'i' } } // Tìm kiếm không phân biệt hoa thường trong username
+                    ]
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    username: 1,
+                    avatar: { $concat: [baseUrl, '$avatar'] }
+                }
+            },
+        ]);
+
+        // tìm kiếm dựa theo tên
+        const nonFriends = await User.aggregate([
+            {
+                $match: {
+                    _id: { $nin: excludeIds, $nin: orderIds, $nin: requestIds }, // Loại trừ các id trong excludeIds
+                    $or: [
+                        { email: { $regex: keyword, $options: 'i' } }, // Tìm kiếm không phân biệt hoa thường trong email
+                        { username: { $regex: keyword, $options: 'i' } } // Tìm kiếm không phân biệt hoa thường trong username
+                    ]
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    username: 1,
+                    avatar: { $concat: [baseUrl, '$avatar'] }
+                }
+            },
+        ]);
 
         // trả về danh sách chưa kết bạn
-        return res.status(200).json(searchFriend);
+        return res.status(200).json({friends, orderFriends, requestFriends, nonFriends});
 
     } catch (error) {
         console.log('search friend error:', error);
@@ -100,7 +189,10 @@ exports.listrequestfriend = async (req, res) => {
         const baseUrl = await getBaseURL(req);
         const userId = req.session.userId;
         // Find the user by their ID
-        const listrequest = await Follow.find({ Sender: userId });
+        const listrequest = await Follow.find({
+            Sender: userId,
+            Status: { $ne: 'Declined', $ne: 'Accepted' }
+        });
         if (!listrequest) {
             return res.status(404).json({ message: 'Ban chua gui ket ban voi ai' });
         }
@@ -338,3 +430,8 @@ exports.removeFriend = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+// kiểm tra có phải bạn bè không
+exports.isFriend = async (req, res) => {
+
+}

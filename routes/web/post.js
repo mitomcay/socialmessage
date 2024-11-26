@@ -7,9 +7,6 @@ const multer = require('multer');
 router.get('/', authMiddleware, postcontroller.getpost);
 router.get('/randompost', authMiddleware, postcontroller.getramdompost);
 
-
-const upload = multer();
-
-router.post('/', upload.fields([{ name: 'image', maxCount: 10 }, { name: 'video', maxCount: 5 }]), postcontroller.pushpost);
+router.post('/', postcontroller.pushpost);
 
 module.exports = router;
