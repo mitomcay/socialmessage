@@ -41,6 +41,7 @@ var friendapiRouter = require('./routes/api/userfriend');
 var communityapiRouter = require('./routes/api/community');
 var chatapiRouter = require('./routes/api/chat');
 var messageapiRouter = require('./routes/api/message'); 
+var mediaApiRouter = require('./routes/api/media');
 
 
 // app.set
@@ -106,6 +107,7 @@ app.use('/api/profile', profileapiRouter);
 app.use('/api/chat', chatapiRouter);
 app.use('/api/community', communityapiRouter);
 app.use('/api/message', messageapiRouter);
+app.use('/api/media', mediaApiRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
