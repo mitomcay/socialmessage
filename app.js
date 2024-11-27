@@ -63,6 +63,7 @@ app.use(cookieParser());
 // Đường dẫn đến favicon
 app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session({
   store: MongoStore.create({
     mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB

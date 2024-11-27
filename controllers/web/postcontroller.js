@@ -3,20 +3,43 @@ const Post = require('../../models/post/post');
 const postlike = require('../../models/post/postlike');
 const postmedia = require('../../models/post/postmedia');
 const Media = require('../../models/media/media'); // Assuming you have this model for media files
-const multer = require('multer');
+const path = require('path'); 
+const { post } = require('../../routes/web/post');
 
 exports.getpost = async (req, res) => {
   try {
     const userId = req.session.userId;
-    const mypost = await Post.find({
-      Author: userId,
-    });
-    
-    if (!mypost) {
+    const mypost = await Post.find({ Author: userId })
+    .populate('Author', 'username') // Lấy thông tin tác giả
+    .exec(); 
+
+    if (!mypost || mypost.length === 0) {
       return res.status(400).json({ message: 'No post found' });
     }
+    
+    let postsWithMedia = [];
 
-    return res.status(200).json({ message: 'List your post', post: mypost });
+    for (let post of mypost) {
+      const postMedia = await postmedia.find({
+        Post: post._id
+      }).populate('media', 'filename filepath MediaType').exec();
+
+      let media = [];
+      postMedia.forEach(postMediaItem => {
+        media.push({
+          filename: postMediaItem.media.filename,
+          filepath: postMediaItem.media.filepath.replace(/\\/g, '/'), // Fix path separator
+          MediaType: postMediaItem.media.MediaType
+        });
+      });
+
+      postsWithMedia.push({
+        post: post,
+        media: media
+      });
+    }
+
+    return res.status(200).json({ message: 'List your post', posts: postsWithMedia });
   } catch (error) {
     console.log(error);
     res.status(500).send(error);
@@ -25,7 +48,34 @@ exports.getpost = async (req, res) => {
 
 exports.getramdompost = async (req, res) => {
   try {
-    const mypost = await Post.aggregate([{ $sample: { size: 10 } }]);
+    const mypost = await Post.aggregate([
+      { $sample: { size: 10 } }, // Lấy ngẫu nhiên 10 bài post
+      {
+        $lookup: {
+          from: 'users', // Tên collection của User
+          localField: 'Author',
+          foreignField: '_id',
+          as: 'AuthorDetails',
+        },
+      },
+      { $unwind: '$AuthorDetails' }, // Giải phóng mảng AuthorDetails
+      {
+        $lookup: {
+          from: 'postmedias', // Tên collection của PostMedia
+          localField: '_id',
+          foreignField: 'Post',
+          as: 'media',
+        },
+      },
+      {
+        $lookup: {
+          from: 'medias', // Tên collection của Media
+          localField: 'media.media',
+          foreignField: '_id',
+          as: 'mediaFiles',
+        },
+      },
+    ]);
     
     if (!mypost) {
       return res.status(400).json({ message: 'No post found' });
@@ -38,61 +88,44 @@ exports.getramdompost = async (req, res) => {
   }
 };
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-      cb(null, 'uploads/'); // Folder to store the uploaded files
-  },
-  filename: function (req, file, cb) {
-      cb(null, Date.now() + '-' + file.originalname); // Renaming file
-  }
-});
-
-const upload = multer({ storage: storage });
 
 exports.pushpost = async (req, res) => {
   try {
-    const userId = req.session.userId;
-    const content = req.body.content;  // Data from form
-    const IsCommunityPost = req.query.IsCommunityPost === 'true'; // From query params
-    const image = req.files?.image;
-    const video = req.files?.video;
+    const userId = req.session.userId; // Lấy ID người dùng từ session
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Please log in' });
+    }
 
-    console.log('Content:', content);
-    console.log('Image:', image);
-    console.log('Video:', video);
-
-    // Create the new post
+    const { content, IsCommunityPost } = req.body;
+    let { mediaIds } = req.body;
+    console.log(content, IsCommunityPost);
+  
+    // Tạo bài post mới
     const newPost = new Post({
       Author: userId,
+      Community: null,
       content: content,
       IsCommunityPost: IsCommunityPost,
     });
 
-    // Save media files if provided
-    if (image) {
-      const media = new Media({
-        type: 'image',
-        filePath: image[0].path, // Fix: Ensure it's an array since it's an object from `upload.fields()`
-      });
-      await media.save();
-      newPost.media = media._id;
-    }
-
-    if (video) {
-      const media = new Media({
-        type: 'video',
-        filePath: video[0].path, // Fix: Ensure it's an array since it's an object from `upload.fields()`
-      });
-      await media.save();
-      newPost.media = media._id;
-    }
-
     await newPost.save();
-    return res.status(200).json({ message: 'Post created successfully' });
+
+    mediaIds.forEach(mediaId => {
+      const newPostMedia = new postmedia({
+        Post: newPost._id,  // Liên kết với bài đăng
+        media: mediaId,  // Liên kết với media
+        Community: null,
+      });
+  
+      newPostMedia.save();
+    });
+
+    return res.status(200).json({
+      message: 'Post created successfully',
+    });
 
   } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
+    console.error('Error creating post:', error);
   }
 };
 
