@@ -36,15 +36,16 @@ exports.createMedia = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'File is required' });
         }
-
+        // Chuyển đổi đường dẫn file từ \\ thành /
+        const normalizedPath = '/' + req.file.path.replace(/\\/g, '/');
         // Tạo media mới
         const media = new Media({
             filename: req.file.filename,
-            filepath: req.file.path,
+            filepath: normalizedPath,
             owner,
             MediaType,
         });
-
+        console.log(media)
         await media.save();
         res.status(201).json({ success: true, data: media });
     } catch (err) {

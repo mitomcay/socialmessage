@@ -28,7 +28,7 @@ exports.friendSuggestions = async (req, res) => {
         const excludeIds = listFriends.filter(friend =>
             friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
         ).map(friend => friend.id);
-        
+
 
         // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
         const otherFriends = await User.aggregate([
@@ -49,7 +49,7 @@ exports.friendSuggestions = async (req, res) => {
 // Tìm kiếm bạn bè
 exports.searchFriend = async (req, res) => {
     try {
-        
+
         const baseUrl = await getBaseURL(req);
         const userId = req.session.userId;
         const keyword = req.params.keyword;
@@ -156,7 +156,7 @@ exports.searchFriend = async (req, res) => {
         ]);
 
         // trả về danh sách chưa kết bạn
-        return res.status(200).json({friends, orderFriends, requestFriends, nonFriends});
+        return res.status(200).json({ friends, orderFriends, requestFriends, nonFriends });
 
     } catch (error) {
         console.log('search friend error:', error);
@@ -168,15 +168,34 @@ exports.searchFriend = async (req, res) => {
 exports.listfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
-        // Find the user by their ID
-        const listfriend = await Friend.find({ User1: userId });
+        // Bước 1: Lấy danh sách bạn bè của userId
+        const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
+        // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
+        const excludeIds = listFriends.filter(friend =>
+            friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
+        ).map(friend => friend.id);
 
-        if (!listfriend) {
+        if (!excludeIds) {
             return res.status(404).json({ message: 'you have been not friend' });
         }
 
+        const friends = await User.aggregate([
+            {
+                $match: {
+                    _id: { $in: excludeIds }, // Các id trong excludeIds
+                }
+            },
+            {
+                $project: {
+                    email: 1,
+                    username: 1,
+                    avatar: { $concat: [baseUrl, '$avatar'] }
+                }
+            },
+        ]);
+
         // Render trang danh sách bạn bè
-        res.status(200).json(listfriend);
+        res.status(200).json(friends);
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
