@@ -135,11 +135,99 @@ exports.getpost = async (req, res) => {
   }
 };
 
+exports.searchPost = async (req, res) => {
+  try {
+    const BaseURL = await getBaseURL(req);
+    const userId = req.session.userId;
+    // Bước 1: Lấy danh sách bạn bè của userId
+    const listFriends = await Friend.find({ $or: [{ User1: userId }, { User2: userId }] });
+
+    // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
+    const excludeIds = listFriends.map(friend =>
+      friend.User1 === userId ? friend.User2 : friend.User1
+    );
+
+    // Bước 3: Lấy trang và giới hạn từ query
+    const { query = "", page = 1, limit = 20 } = req.params;
+    console.log(excludeIds)
+    // Bước 4: Tạo pipeline để phân trang và sắp xếp theo thời gian
+    const mypost = await Post.aggregate([
+      // Lọc bài viết (ví dụ: lọc theo Author hoặc điều kiện khác)
+      {
+        $match: {
+          Author: { $in: excludeIds },
+          content: { $regex: query, $options: 'i' }
+        }
+      },
+
+      // Sắp xếp bài viết theo thời gian tạo
+      { $sort: { CreatedAt: -1 } },
+
+      // Phân trang
+      { $skip: (page - 1) * limit },
+      { $limit: parseInt(limit) },
+      // Kết nối với bảng postmedia để tìm media liên quan
+      {
+        $lookup: {
+          from: "postmedias", // Tên collection `postmedia`
+          localField: "_id", // Trường `_id` trong bảng `post`
+          foreignField: "Post", // Trường `Post` trong bảng `postmedia`
+          as: "postMedia", // Tên field mới chứa dữ liệu liên kết
+        },
+      },
+
+      // Unwind để trải postMedia thành các đối tượng riêng biệt
+      { $unwind: "$postMedia" },
+      // Kết nối từ postMedia sang bảng media để lấy chi tiết media
+      {
+        $lookup: {
+          from: "media", // Tên collection `media`
+          localField: "postMedia.media", // Trường `media` trong `postmedia`
+          foreignField: "_id", // Trường `_id` trong `media`
+          as: "mediaDetails", // Tên field mới chứa chi tiết media
+        },
+      },
+      // Unwind để trải mediaDetails thành các đối tượng riêng biệt
+      { $unwind: "$mediaDetails" },
+      // Thêm chuỗi 'http://123.com/' vào trước filepath
+      {
+        $addFields: {
+          "mediaDetails.filepath": {
+            $concat: [BaseURL, "$mediaDetails.filepath"]
+          }
+        }
+      },
+      // Tùy chọn: Chỉ giữ lại các trường cần thiết
+      {
+        $project: {
+          _id: 1,
+          Author: 1,
+          content: 1,
+          CreatedAt: 1,
+          IsCommunityPost: 1,
+          mediaDetails: 1, // Chi tiết media được kết nối
+        },
+      },
+    ]);
+
+    console.log(mypost);
+
+    if (mypost.length === 0) {
+      return res.status(400).json({ message: 'No post found' });
+    }
+
+    res.status(200).json({ post: mypost });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send(error);
+  }
+}
+
 exports.getUserPost = async (req, res) => {
   try {
     const { UserId } = req.params.userId;
     const userPost = await Post.findOne({
-      Author: userId,
+      Author: UserId,
     });
 
     if (!userPost) {
