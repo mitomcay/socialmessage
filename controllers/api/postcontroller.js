@@ -479,7 +479,6 @@ exports.likepost = async (req, res) => {
     if (existinglikepost) {
       // If it is already liked, remove the like
       await existinglikepost.remove();
-      return res.status(200).json({ message: 'unlike post success' });
     }
 
     // If it is not liked yet, add a new like

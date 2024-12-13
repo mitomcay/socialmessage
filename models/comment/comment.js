@@ -19,11 +19,11 @@ const  commentschema  = mongoose.Schema({
     },
     createdAt:{
         type: Date,
-        type: Date.now,
+        default: Date.now,
     },
     updatedAt:{
         type: Date,
-        type: Date.now,
+        default: Date.now,
     },
     MediaType:{
         type: String,
