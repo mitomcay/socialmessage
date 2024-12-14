@@ -77,9 +77,12 @@
                 const postsContainer = document.querySelector('.posts');
                 postsContainer.innerHTML = '';
 
+
                 if (data.posts && data.posts.length > 0) {
-                    data.posts.forEach(postData => {
+                    data.posts.forEach(async postData => {
                         const post = postData.post;
+                        const isLiked = await checkIfPostLiked(post._id);
+
                         postsContainer.innerHTML += `
                             <div class="post">
                                 ${post.IsCommunityPost ? `<div><strong>Community Post:</strong> ${post.Community}</div>` : ''}
@@ -91,19 +94,21 @@
                                 
                                 <div class="comments">
                                     <h4 style="display: flex;"> 
-                                        <button class="like-btn" data-post-id="${post._id}">Like</button> 
-                                        <button class="comment-btn" onclick="toggleComment(event)">Comments</button>
+                                         <button class="like-btn ${isLiked ? 'liked' : ''}" data-post-id="${post._id}">
+                                            <i class="far fa-heart"></i> Like
+                                        </button>
+                                        <button class="comment-btn" data-post-id="${post._id}" onclick="toggleComment(event)"><i class="fas fa-comment"></i>comments</button>
                                     </h4>
                                     <div id="comment" style="display: none;">
                                         <div class="comment-container">
                                             <textarea placeholder="Add a comment..." class="comment-input" data-post-id="${post._id}"></textarea>
-                                            <button class="comment-btn" data-post-id="${post._id}">Comment</button>
+                                            <button class="comment-btn-2" data-post-id="${post._id}">Comment</button>
                                             <button onclick="toggleComment(event)">Đóng</button>
-                                        </div>
+                                            <div>Comment:<div/>
+                                            <div style="display: block;" class="comment-list" id="comments-${post._id}"></div>
+                                        </div> 
                                     </div>
-                                    <div class="comment-list" id="comments-${post._id}"></div>
                                 </div>
-                                
                             </div>`;
 
                         // Get the media container for this specific post
@@ -114,11 +119,11 @@
                                 let mediaContent = '';
                                 console.log(postMedia.MediaType, postMedia.filepath );
                                 if (postMedia.MediaType === 'Image') {
-                                    mediaContent = `<img src="../${postMedia.filepath}" alt="media" />`;
+                                    mediaContent = `<img src="..${postMedia.filepath}" alt="media" />`;
                                 } else if (postMedia.MediaType === 'Video') {
-                                    mediaContent = `<video controls><source src="../${postMedia.filepath}" type="video/mp4"></video>`;
+                                    mediaContent = `<video controls><source src="..${postMedia.filepath}" type="video/mp4"></video>`;
                                 } else if (postMedia.MediaType === 'Audio') {
-                                    mediaContent = `<audio controls><source src="../${postMedia.filepath}" type="audio/mp3"></audio>`;
+                                    mediaContent = `<audio controls><source src="..${postMedia.filepath}" type="audio/mp3"></audio>`;
                                 }
                                 mediaContainer.innerHTML += mediaContent;
                             });
@@ -213,11 +218,15 @@
         document.addEventListener('click', async function (e) {
             if (e.target.classList.contains('like-btn')) {
                 const postId = e.target.getAttribute('data-post-id');
+                const button = e.target;
                 // Gửi yêu cầu thích bài viết
                 try {
-                    const response = await fetch(`/post/${postId}/like`, { method: 'POST' });
+                    const response = await fetch(`/post/like/${postId}`, { method: 'POST' });
                     if (response.ok) {
-                        alert('You liked the post!');
+                        const data = await response.json();
+                        const notification = data.message;
+                        alert(notification);
+                        button.classList.toggle('liked');
                     } else {
                         alert('Failed to like the post.');
                     }
@@ -228,24 +237,32 @@
 
             if (e.target.classList.contains('comment-btn')) {
                 const postId = e.target.getAttribute('data-post-id');
+                fetchComments(postId);
+            }
+
+            if (e.target.classList.contains('comment-btn-2')) {
+                const postId = e.target.getAttribute('data-post-id');
                 const commentInput = document.querySelector(`.comment-input[data-post-id="${postId}"]`);
                 const comment = commentInput.value;
-
+                
                 // Gửi yêu cầu bình luận
                 try {
-                    const response = await fetch(`/post/${postId}/comment`, {
+                    const response = await fetch(`/comment`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                         },
-                        body: JSON.stringify({ comment }),
+                        body: JSON.stringify({ comment, postId }),
                     });
                     if (response.ok) {
-                        alert('Comment added!');
+                        const data = await response.json();
+                        const message = data.message;
+                        alert(message);
                         commentInput.value = ''; // Xóa nội dung ô nhập
                         fetchComments(postId); // Tải lại bình luận
                     } else {
-                        alert('Failed to add comment.');
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.error || 'Something went wrong' || 'Failed to add comment.'}`);
                     }
                 } catch (err) {
                     console.error('Error adding comment:', err);
@@ -256,13 +273,17 @@
         // Hàm để lấy và hiển thị bình luận
         async function fetchComments(postId) {
             try {
-                const response = await fetch(`/post/${postId}/comments`);
+                const response = await fetch(`/comment/${postId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch comments');
+                }
                 const data = await response.json();
                 const commentList = document.getElementById(`comments-${postId}`);
-                commentList.innerHTML = '';
+                
 
                 data.comments.forEach(comment => {
-                    commentList.innerHTML += `<p>${comment.text}</p>`;
+                    let cm = `<p> ${comment.Author.username}: ${comment.content} <p/>`;
+                    commentList.innerHTML += cm;
                 });
             } catch (error) {
                 console.error('Error fetching comments:', error);
@@ -298,6 +319,23 @@
                 comment.style.display = "none"; // Ẩn phần tử khi đã hiển thị
             } else {
                 comment.style.display = "flex"; // Hiển thị phần tử ở giữa màn hình
+            }
+        }
+
+        async function checkIfPostLiked(postId) {
+            try {
+                const response = await fetch('/post/getlike', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ postId }),
+                });
+                const data = await response.json();
+                return data.isLiked; // returns true or false based on the API response
+            } catch (error) {
+                console.error('Error checking like status:', error);
+                return false; // Assume not liked if there's an error
             }
         }
     </script>

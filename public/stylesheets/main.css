@@ -153,6 +153,23 @@ nav .logo {
     margin-top: 10px;
 }
 
+/* Khi người dùng chưa thích */
+.like-btn i {
+    color: #ccc; /* Màu xám cho biểu tượng */
+}
+
+/* Khi người dùng đã thích */
+.like-btn.liked i {
+    color: red; /* Màu đỏ khi liked */
+}
+
+.fas.fa-comment {
+    font-size: 20px;  /* Đổi kích thước biểu tượng */
+    color: #555;      /* Đổi màu biểu tượng */
+    margin-right: 5px; /* Khoảng cách giữa biểu tượng và chữ */
+}
+
+
 /* Media Queries */
 
 /* Tablet and above */

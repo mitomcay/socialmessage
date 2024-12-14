@@ -28,6 +28,7 @@ var communitywebRouter = require('./routes/web/community');
 var chatwebRouter = require('./routes/web/chat'); 
 var messagewebRouter = require('./routes/web/message'); 
 var googleAuthRoutes = require('./routes/web/auth/googleAuth');
+var commentwebRouter = require('./routes/web/comment')
 
 // routes cho mobile
 var indexapiRouter = require('./routes/api/index');
@@ -99,6 +100,7 @@ app.use('/profile', profilewebRouter);
 app.use('/chat', chatwebRouter);
 app.use('/community', communitywebRouter);
 app.use('/message', messagewebRouter);
+app.use('/comment', commentwebRouter);
 
 // app.use api
 app.use('/api', indexapiRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập

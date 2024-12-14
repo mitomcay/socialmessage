@@ -129,10 +129,35 @@ exports.pushpost = async (req, res) => {
   }
 };
 
+exports.getlikepost = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { postId } = req.body;
+    
+    // Check if the user has already liked the post
+    const existinglikepost = await postlike.findOne({
+      post: postId,
+      User: userId,
+    });
+
+    if (existinglikepost) {
+      return res.status(200).json({ isLiked: true });
+    }
+
+
+    return res.status(200).json({ isLiked: false });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send('Internal Server Error');
+  }
+};
+
 exports.likepost = async (req, res) => {
   try {
     const userId = req.session.userId;
     const { postId } = req.body;
+    
+    // Check if the user has already liked the post
     const existinglikepost = await postlike.findOne({
       post: postId,
       User: userId,
@@ -141,17 +166,20 @@ exports.likepost = async (req, res) => {
     if (existinglikepost) {
       // Remove like if it already exists
       await postlike.deleteOne(existinglikepost);
+      return res.status(200).json({ message: 'You disliked the post successfully', isLiked: false });
     }
 
+    // Add a new like to the post if not already liked
     const newlikepost = new postlike({
       post: postId,
       User: userId,
     });
     await newlikepost.save();
 
-    res.status(200).json({ message: 'Like post success' });
+    return res.status(200).json({ message: 'You liked the post successfully', isLiked: true });
   } catch (error) {
     console.log(error);
-    res.status(500).send(error);
+    return res.status(500).send('Internal Server Error');
   }
 };
+
