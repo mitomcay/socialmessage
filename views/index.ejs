@@ -20,6 +20,7 @@
                 <li><a href="/">Home</a></li>
                 <li><a href="/profile">Profile</a></li>
                 <li><a href="/messages">Messages</a></li>
+                <li><a href="/community/page">Community</a></li>
                 <li>
                     <div class="search-bar">
                         <input type="text" id="searchInput" placeholder="Search..." />
@@ -41,9 +42,12 @@
                         <textarea name="content" placeholder="What's on your mind?" required></textarea>
                     </div>
                     <div>
-                        <label>Community Post</label>
-                        <input type="checkbox" name="IsCommunityPost" value="true" />
-                    </div>
+                        <label for="community-select">Select Community:</label>
+                        <select id="community-select" name="communityId">
+                            <option value="">--Choose Community--</option>
+                            <!-- Options sẽ được thêm động -->
+                        </select>
+                    </div>                    
                     <div id="uploadForm">
                         <input type="file" id="mediaInput" name="media" accept="image/*, video/*" multiple />
                     </div>
@@ -82,10 +86,11 @@
                     data.posts.forEach(async postData => {
                         const post = postData.post;
                         const isLiked = await checkIfPostLiked(post._id);
+                        const community = postData.community;
 
                         postsContainer.innerHTML += `
                             <div class="post">
-                                ${post.IsCommunityPost ? `<div><strong>Community Post:</strong> ${post.Community}</div>` : ''}
+                                ${post.IsCommunityPost ? `<div><strong>Community Post:</strong> ${post.Community.name}</div>` : ''}
                                 <h3>${post.Author.username}</h3>
                                 <div>
                                     ${post.content}
@@ -104,7 +109,7 @@
                                             <textarea placeholder="Add a comment..." class="comment-input" data-post-id="${post._id}"></textarea>
                                             <button class="comment-btn-2" data-post-id="${post._id}">Comment</button>
                                             <button onclick="toggleComment(event)">Đóng</button>
-                                            <div>Comment:<div/>
+                                            <div>Comment:</div>
                                             <div style="display: block;" class="comment-list" id="comments-${post._id}"></div>
                                         </div> 
                                     </div>
@@ -137,16 +142,18 @@
             }
         }
 
-        window.onload = fetchPosts;
+        window.onload = function () {
+            fetchPosts();
+            fetchCommunities(); // Gọi hàm để tải danh sách cộng đồng
+        };
 
         let mediaIds = [];
         document.getElementById('postForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const content = this.querySelector('textarea[name="content"]').value;
-            const isCommunityPost = this.querySelector('input[name="IsCommunityPost"]').checked;
+            const community = document.getElementById('community-select').value;
             const mediaInput = document.getElementById('mediaInput').files;
-
 
             if (mediaInput.length > 0) {
                 const uploadPromises = Array.from(mediaInput).map(async (file) => {
@@ -200,7 +207,7 @@
                     },
                     body: JSON.stringify({
                         content,
-                        IsCommunityPost: isCommunityPost,
+                        community: community,
                         mediaIds: mediaIds,
                     }),
                 });
@@ -312,13 +319,30 @@
             }
         });
         
-        function toggleComment(event) {
+        async function toggleComment(event) {
             event.preventDefault();  // Ngăn chặn hành vi mặc định nếu cần
             const comment = document.getElementById("comment");
             if (comment.style.display === "flex") {
                 comment.style.display = "none"; // Ẩn phần tử khi đã hiển thị
             } else {
                 comment.style.display = "flex"; // Hiển thị phần tử ở giữa màn hình
+            }
+        }
+
+        async function fetchCommunities() {
+            try {
+                const response = await fetch('/community'); // API lấy danh sách cộng đồng
+                const data = await response.json();
+
+                const communitySelect = document.getElementById('community-select');
+                data.community.forEach(cm => {
+                    const option = document.createElement('option');
+                    option.value = cm._id; // ID của cộng đồng
+                    option.textContent = cm.name; // Tên của cộng đồng
+                    communitySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching communities:', error);
             }
         }
 

@@ -6,7 +6,52 @@ const Media = require('../../models/media/media'); // Assuming you have this mod
 const path = require('path'); 
 const { post } = require('../../routes/web/post');
 
-exports.getpost = async (req, res) => {
+exports.getallpost = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+
+    // Lấy tất cả bài viết cùng tác giả và cộng đồng
+    const mypost = await Post.find()
+      .populate('Author', 'username') // Lấy thông tin tác giả
+      .populate('Community', 'name') // Lấy thông tin cộng đồng (chỉ tên)
+      .exec();
+
+    if (!mypost || mypost.length === 0) {
+      return res.status(400).json({ message: 'No post found' });
+    }
+
+    let postsWithMedia = [];
+
+    for (let post of mypost) {
+      // Lấy tất cả media liên quan đến bài viết
+      const postMedia = await postmedia.find({
+        Post: post._id
+      }).populate('media', 'filename filepath MediaType').exec();
+
+      let media = [];
+      postMedia.forEach(postMediaItem => {
+        media.push({
+          filename: postMediaItem.media.filename,
+          filepath: postMediaItem.media.filepath.replace(/\\/g, '/'), // Fix đường dẫn
+          MediaType: postMediaItem.media.MediaType
+        });
+      });
+      
+      // Thêm thông tin bài viết, media và cộng đồng
+      postsWithMedia.push({
+        post: post,
+        media: media,
+      });
+    }
+
+    return res.status(200).json({ message: 'List your post', posts: postsWithMedia });
+  } catch (error) {
+    console.log(error);
+    res.status(500).send({ message: 'Internal Server Error', error });
+  }
+};
+
+exports.getmypost = async (req, res) => {
   try {
     const userId = req.session.userId;
     const mypost = await Post.find({ Author: userId })
@@ -96,16 +141,16 @@ exports.pushpost = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized: Please log in' });
     }
 
-    const { content, IsCommunityPost } = req.body;
+    const { content, community } = req.body;
     let { mediaIds } = req.body;
-    console.log(content, IsCommunityPost);
+    console.log(content, community);
   
     // Tạo bài post mới
     const newPost = new Post({
       Author: userId,
-      Community: null,
+      Community: community,
       content: content,
-      IsCommunityPost: IsCommunityPost,
+      IsCommunityPost: community ? true : false,
     });
 
     await newPost.save();
@@ -114,7 +159,7 @@ exports.pushpost = async (req, res) => {
       const newPostMedia = new postmedia({
         Post: newPost._id,  // Liên kết với bài đăng
         media: mediaId,  // Liên kết với media
-        Community: null,
+        Community: community,
       });
   
       newPostMedia.save();

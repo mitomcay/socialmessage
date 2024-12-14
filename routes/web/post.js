@@ -4,7 +4,8 @@ const authMiddleware = require('../../middlewares/web/authMiddleware');
 var postcontroller = require('../../controllers/web/postcontroller');
 const multer = require('multer');
 
-router.get('/', authMiddleware, postcontroller.getpost);
+router.get('/', authMiddleware, postcontroller.getallpost);
+router.get('/mypost', authMiddleware, postcontroller.getmypost);
 router.get('/randompost', authMiddleware, postcontroller.getramdompost);
 
 router.post('/', postcontroller.pushpost);

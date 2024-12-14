@@ -1,0 +1,29 @@
+<!-- views/communityPage.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cộng đồng - <%= community.name %></title>
+  <link rel="stylesheet" href="/stylesheets/communitypage.css">
+</head>
+<body>
+  <h1><%= community.name %></h1>
+  <p><%= community.description %></p>
+
+  <h2>Bài viết trong cộng đồng</h2>
+  <ul>
+    <% if (posts && Array.isArray(posts)) { %> 
+      <% posts.forEach(function(post) { %>
+        <li>
+          <h3><%= post.Community.name %></h3>
+          <div><%= post.Author %></div>
+          <p><%= post.content %></p>
+        </li>
+      <% }); %>
+      <% } else { %>
+        <p>Không có cộng đồng nào để hiển thị.</p>
+    <% } %>
+  </ul>
+</body>
+</html>
