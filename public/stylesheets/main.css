@@ -129,6 +129,27 @@ nav .logo {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
+#community {
+    display: none; /* Ẩn phần tử */
+    position: fixed; /* Đặt phần tử cố định */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Che mờ phần giao diện còn lại */
+    z-index: 1000; /* Đảm bảo nó nằm trên các phần tử khác */
+    justify-content: center;
+    align-items: center;
+    display: flex; /* Dùng Flexbox để căn giữa phần tử */
+}
+
+#community-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
 
 .post:last-child {
     border-bottom: none;

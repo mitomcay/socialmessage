@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản lý Cộng đồng</title>
+  <link rel="stylesheet" href="../stylesheets/community.css">
+</head>
+<body>
+    <section>
+        <nav>
+            <div class="logo">2 FRIEND</div>
+        </nav>
+    </section>
+
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="/profile">Profile</a></li>
+                <li><a href="/messages">Messages</a></li>
+                <li><a href="/community/page">Community</a></li>
+                <li>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Search..." />
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <div class="main-content">
+            <h1>Quản lý Cộng đồng</h1>
+
+            <!-- Form tạo cộng đồng mới -->
+            <form action="/community/create" method="POST">
+                <input type="text" name="name" placeholder="Tên cộng đồng" required>
+                <textarea name="description" placeholder="Mô tả cộng đồng" required></textarea>
+                <label for="isPrivate">Cộng đồng riêng tư</label>
+                <input type="checkbox" name="Isprivate" id="isPrivate">
+                <button type="submit">Tạo cộng đồng</button>
+            </form>
+
+            <!-- Hiển thị danh sách cộng đồng -->
+            <h2>Cộng đồng hiện có</h2>
+            <ul>
+                <% if (community && Array.isArray(community)) { %> 
+                    <% community.forEach(function(cm) { %>
+                        <li class="community-item">
+                            <h3><%= cm.name %></h3>
+                            <p><%= cm.description %></p>
+                            <!-- Tạo một nút để tham gia cộng đồng -->
+                            <form action="/community/page/<%= cm._id %>" method="get">
+                                <button type="submit">Truy cap cộng đồng</button>
+                            </form>
+                        </li>
+                    <% }); %>
+                <% } else { %>
+                    <p>Không có cộng đồng nào để hiển thị.</p>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

@@ -5,7 +5,7 @@ const  postschema  = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
-    Comunity:{
+    Community:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'community',
         required: false,
