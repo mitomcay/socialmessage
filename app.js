@@ -68,8 +68,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session({
   store: MongoStore.create({
-    // mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB
-    mongoUrl: 'mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+    mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB
+    //mongoUrl: 'mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
     collectionName: 'sessions' // Tên collection lưu session
   }),
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
