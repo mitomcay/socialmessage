@@ -20,6 +20,12 @@ const  chatschema  = mongoose.Schema({
     Isgroup: {
         type: Boolean,
         default: false,
+    },
+    readBy: { 
+        // Lưu danh sách ID người dùng đã đọc
+        type: [mongoose.Schema.Types.ObjectId], 
+        ref: 'User', 
+        default: [] 
     }
 });
 

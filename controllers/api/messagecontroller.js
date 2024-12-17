@@ -5,6 +5,36 @@ const media = require('../../models/media/media');
 const chatmember = require('../../models/chat/chatmember');
 const chat = require('../../models/chat/chat');
 
+exports.getChat = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const chatMembers = chatmember.find({ User: userId });
+    // tách lấy phần ID đoạn chat
+
+    // lấy thông tin đoạn chat
+
+    // lấy thông tin thành viên
+
+    // lấy tin nhắn mới nhất
+
+  } catch (error) {
+    console.log('get chat error:', error);
+    return res.status(500).json({ message: 'server error' });
+  }
+};
+/*
+app.put('/messages/:id/read', async (req, res) => {
+  try {
+    const { userId } = req.body;  // Lấy userId từ body request
+    const messageId = req.params.id;
+    await Message.findByIdAndUpdate(messageId, { $addToSet: { readBy: userId } });  // Thêm userId vào mảng readBy nếu chưa có
+    res.status(200).send({ message: 'Message marked as read.' });
+  } catch (error) {
+    res.status(500).send({ error: 'Failed to update message status.' });
+  }
+});
+*/
+
 exports.sendMessage = async (req, res) => {
   try {
     const { content, chatId, repliedMessageId, mediaIds } = req.body;
@@ -168,5 +198,5 @@ exports.removeMember = async (req, res) => {
 };
 
 exports.changeNameGroup = async (req, res) => {
-  
-}
+
+};
