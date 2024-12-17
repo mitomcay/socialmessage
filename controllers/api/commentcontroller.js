@@ -1,17 +1,20 @@
 const { getCommentLikeDetails } = require('../../lib/CommentLike');
+const { default: mongoose } = require('mongoose');
 const Comment = require('../../models/comment/comment');
-const CommentLike = require('../../models/comment/commentlike')
+const CommentLike = require('../../models/comment/commentlike');
+const commentlike = require('../../models/comment/commentlike');
 
 exports.getComment = async (req, res) => {
   try {
     const { postId } = req.params;
     const userId = req.session.userId;
-    const comments = Comment.aggregate([
+    const comments = await Comment.aggregate([
       { $match: { post: new mongoose.Types.ObjectId(postId) } },
       // Sắp xếp bài viết theo thời gian tạo
       { $sort: { createdAt: -1 } },
     ])
-    // Sử dụng hàm getPostLikeDetails cho từng post 
+    console.log(comments);
+    // Sử dụng hàm commentsWithLikeDetails để lấy giá trị like cho từng comment
     const commentsWithLikeDetails = await Promise.all(
       comments.map(async (comment) => {
         const likeDetails = await getCommentLikeDetails(comment._id, userId);
@@ -23,14 +26,16 @@ exports.getComment = async (req, res) => {
       })
     );
     if (commentsWithLikeDetails.length === 0) {
-      return res.status(400).json({ message: 'No post found' });
+      return res.status(400).json({ message: 'No comment found' });
     }
+    return res.status(200).json(commentsWithLikeDetails);
   } catch (error) {
+    console.log('get comment error:', error);
     res.status(500).json({ message: "Error: " + error.message });
   }
 }
 
-exports.pustComment = async (req, res) => {
+exports.createComment = async (req, res) => {
   try {
     const userId = req.session.userId;
     const { postId, content } = req.body;
@@ -65,14 +70,15 @@ exports.likeComment = async (req, res) => {
     }
 
     // If it is not liked yet, add a new like
-    const newlikepost = new postlike({
-      post: postId,
+    const newlikecomment = new commentlike({
+      Comment: commentId,
       User: userId,
     });
-    await newlikepost.save();
+    await newlikecomment.save();
 
     res.status(200).json({ message: 'like post success' });
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error: " + error.message });
   }
 }
@@ -89,13 +95,14 @@ exports.unLikeComment = async (req, res) => {
 
     if (existinglikecomment) {
       // If it is already liked, remove the like
-      await existinglikecomment.remove();
-      res.status(200).json({ message: 'unlike comment success' });
+      await CommentLike.deleteOne({ _id: existinglikecomment._id });
+      return res.status(200).json({ message: 'unlike comment success' });
     }
 
-    res.status(404).json({ message: 'Comment like not found' });
+    return res.status(404).json({ message: 'Comment like not found' });
   } catch (error) {
-    res.status(500).json({ message: "Error: " + error.message });
+    console.log(error);
+    return res.status(500).json({ message: "Error: " + error.message });
   }
 }
 

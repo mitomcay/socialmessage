@@ -5,8 +5,8 @@ const commentcontroller = require('../../controllers/api/commentcontroller');
 const { authenticate } = require('passport');
 
 router.get('/:postId', authMiddleware, commentcontroller.getComment);
-router.post('/:postId', authMiddleware, commentcontroller.pustComment);
-router.post('/:commentId', authMiddleware, commentcontroller.likeComment);
-router.delete('/:commentId', authMiddleware, commentcontroller.unLikeComment);
+router.post('/', authMiddleware, commentcontroller.createComment);
+router.post('/like/:commentId', authMiddleware, commentcontroller.likeComment);
+router.delete('/like/:commentId', authMiddleware, commentcontroller.unLikeComment);
 
 module.exports = router;

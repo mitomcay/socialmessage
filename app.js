@@ -130,10 +130,16 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
+mongoose.connect('mongodb://localhost:27017/social_network').then(() => {
+  console.log('Connected to MongoDB');
+}).catch((error) => {
+  console.error('MongoDB connection error:', error);
+});
+/*
 mongoose.connect('mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
 });
-
+*/
 module.exports = app;
