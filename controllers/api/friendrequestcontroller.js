@@ -5,6 +5,7 @@ const chat = require('../../models/chat/chat');
 const chatmember = require('../../models/chat/chatmember');
 const message = require('../../models/message/message');
 const { getBaseURL } = require('../../lib/BaseURL');
+const { default: mongoose } = require('mongoose');
 
 // danh sách chưa kết bạn bạn bè
 exports.friendSuggestions = async (req, res) => {
@@ -25,9 +26,13 @@ exports.friendSuggestions = async (req, res) => {
         });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
-        const excludeIds = listFriends.filter(friend =>
-            friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
-        ).map(friend => friend.id);
+        const excludeIds_temp = await Array.from( new Set( listFriends.map(friend =>
+            friend.User1.toString() === userId.toString() ? friend.User2.toString() : friend.User1.toString()
+        )));
+        // Chuyển đổi các id từ string sang ObjectId 
+        const excludeIds = excludeIds_temp.map(id => new mongoose.Types.ObjectId(id));
+
+
 
 
         // Bước 3: Tìm ngẫu nhiên 20 người trừ những người trong excludeIds
@@ -68,10 +73,11 @@ exports.searchFriend = async (req, res) => {
         });
 
         // Bước 2: Tạo mảng chứa User2 của các tài liệu trong listFriends
-        const excludeIds = listFriends.filter(friend =>
-            friend.User1.toString() === userId.toString() ? friend.User2 : friend.User1
-        ).map(friend => friend.id);
-
+        const excludeIds_temp = await Array.from( new Set( listFriends.map(friend =>
+            friend.User1.toString() === userId.toString() ? friend.User2.toString() : friend.User1.toString()
+        )));
+        // Chuyển đổi các id từ string sang ObjectId 
+        const excludeIds = excludeIds_temp.map(id => new mongoose.Types.ObjectId(id));
         const requestIds = listrequest.map(fl => fl.Accept);
         const orderIds = listorder.map(fl => fl.Sender);
 

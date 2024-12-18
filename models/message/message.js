@@ -17,11 +17,11 @@ const  messageschema  = mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'message',
     },
-    CreatedAt:{
+    createdAt:{
         type: Date,
         default: Date.now,
     },
-    UpdatedAt:{
+    updatedAt:{
         type: Date,
         default: Date.now,
     },
