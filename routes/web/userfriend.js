@@ -9,5 +9,6 @@ router.get('/Orderfriend', authMiddleware, friendController.listorderfriend);
 router.post('/addfriend', friendController.addfriend);
 router.post('/acceptfriend', friendController.acceptfriend);
 router.post('/removeFriend', friendController.removeFriend);
+router.get('/search', friendController.searchfriend);
 
 module.exports = router;

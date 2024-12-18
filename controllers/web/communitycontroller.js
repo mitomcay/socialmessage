@@ -138,32 +138,43 @@ exports.getMemberofCommunity = async (req, res) => {
 
 exports.searchCommunity = async (req, res) => {
   try {
-      // Lấy từ khóa tìm kiếm từ query parameters
-      const { query } = req.query;
+    // Lấy từ khóa tìm kiếm từ query parameters
+    const { query } = req.query;
 
-      // Kiểm tra nếu không có từ khóa tìm kiếm
-      if (!query) {
-        return res.status(400).json({ message: "Search query is required" });
-      }
+    // Kiểm tra nếu không có từ khóa tìm kiếm
+    if (!query) {
+      return res.status(400).json({ message: "Search query is required" });
+    }
 
-      // Tìm kiếm cộng đồng theo tên cộng đồng (hoặc các thuộc tính khác)
-      const foundCommunities = await community.find({
-        name: { $regex: query, $options: 'i' }  // Tìm kiếm không phân biệt hoa thường
-      });
+    // Tìm kiếm cộng đồng theo tên cộng đồng (hoặc các thuộc tính khác)
+    const foundCommunities = await community.find({
+      name: { $regex: query, $options: 'i' }  // Tìm kiếm không phân biệt hoa thường
+    });
 
-      // Nếu không tìm thấy cộng đồng nào
-      if (foundCommunities.length === 0) {
-        return res.status(200).json({ message: "No communities found", communities: [] });
-      }
+    // Nếu không tìm thấy cộng đồng nào
+    if (foundCommunities.length === 0) {
+      return res.status(200).json({ message: "No communities found", communities: [] });
+    }
 
-      // Trả về danh sách cộng đồng tìm thấy
-      return res.status(200).json({ message: "Communities found", communities: foundCommunities });
+    // Lấy danh sách ID của các cộng đồng tìm được
+    const communityIds = foundCommunities.map(cm => cm._id);
+
+    // Tìm các bài viết thuộc về các cộng đồng tìm được
+    const posts = await post.find({ community: { $in: communityIds } });
+
+    // Trả về danh sách cộng đồng và bài viết
+    return res.status(200).json({
+      message: "Communities found",
+      communities: foundCommunities,
+      posts: posts
+    });
 
   } catch (error) {
-      // Xử lý lỗi
-      res.status(500).json({ message: "Error: " + error.message });
+    // Xử lý lỗi
+    res.status(500).json({ message: "Error: " + error.message });
   }
 };
+
 
 exports.deleteCommunity = async (req, res) => {
   try {

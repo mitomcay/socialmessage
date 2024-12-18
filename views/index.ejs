@@ -19,17 +19,13 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/profile">Profile</a></li>
-                <li><a href="/messages">Messages</a></li>
+                <li><a href="/message">Messages</a></li>
                 <li><a href="/community/page">Community</a></li>
+                <li><a href="/friend/Orderfriend">Friend</a></li>
                 <li>
                     <div class="search-bar">
                         <input type="text" id="searchInput" placeholder="Search..." />
                     </div>
-                </li>
-                <li>
-                    <form action="/logout" method="get">
-                        <button type="submit" class="logout-btn">Logout</button>
-                    </form>
                 </li>
             </ul>
         </div>
@@ -61,15 +57,18 @@
             </section>
         </div>
 
+        <!-- friend -->
         <div class="friends">
-            <h3>Friends</h3>
-            <ul>
-                <li>Friend 1</li>
-                <li>Friend 2</li>
-                <li>Friend 3</li>
-                <!-- Add more friends as needed -->
-            </ul>
+            <h2>Friends</h2>
+            <div class="search-friends">
+                <input type="text" id="friend-search" placeholder="Search for friends..." />
+                <button onclick="searchFriends()">Search</button>
+            </div>
+            <div id="search-results">
+                <!-- Search results will be displayed here -->
+            </div>
         </div>
+        
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -300,7 +299,7 @@
         document.getElementById('searchInput').addEventListener('input', async function () {
             const query = this.value;
             if (query.length > 0) {
-                const response = await fetch(`/search?query=${encodeURIComponent(query)}`);
+                const response = await fetch(`/community/search?query=${query}`);
                 const data = await response.json();
                 const postsContainer = document.querySelector('.posts');
                 postsContainer.innerHTML = '';
@@ -362,6 +361,62 @@
                 return false; // Assume not liked if there's an error
             }
         }
+    
+        function searchFriends() {
+            const searchInput = document.getElementById('friend-search').value;
+
+            if (!searchInput) {
+                alert('Please enter a name to search.');
+                return;
+            }
+
+            fetch(`/friend/search?name=${encodeURIComponent(searchInput)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('search-results');
+                    resultsDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p>No friends found.</p>';
+                        return;
+                    }
+
+                    data.forEach(friend => {
+                        const friendElement = document.createElement('div');
+                        friendElement.classList.add('friend-item');
+                        friendElement.innerHTML = `
+                            <p>${friend.username}</p>
+                            <button onclick="sendFriendRequest('${friend._id}')">Send Friend Request</button>
+                        `;
+                        resultsDiv.appendChild(friendElement);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error searching for friends:', error);
+                });
+        }
+
+        function sendFriendRequest(receiverId) {
+            fetch('/friend/addfriend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ receiverId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) { // Kiểm tra thông báo thành công từ server
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error sending friend request:', error);
+            });
+        }
+    
     </script>
 </body>
 </html>

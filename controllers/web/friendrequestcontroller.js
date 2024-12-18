@@ -12,11 +12,11 @@ exports.listfriend = async (req, res) => {
         const listfriend = await Friend.findOne({ User1: userId });
 
         if (!listfriend) {
-            return res.status(404).json({ message: 'you have been not friend' });
+            return res.status(404).render('friend',{ message: 'you have been not friend', friends: null});
         }
 
         // Render trang danh sách bạn bè
-        res.status(200).json({ message: 'List of Friends', friends: listfriend, loggedInUserId: userId });
+        res.status(200).render('friend',{ message: 'List of Friends', friends: listfriend, loggedInUserId: userId });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -41,18 +41,35 @@ exports.listrequestfriend = async (req, res) => {
     }
 };
 
+exports.searchfriend = async (req, res) => {
+    const { name } = req.query;
+
+    try {
+        const users = await User.find({ 
+            username: { $regex: name, $options: 'i' } // Tìm tên theo chuỗi nhập vào (không phân biệt hoa thường)
+        });
+
+        res.json(users);
+    } catch (err) {
+        console.error('Error searching for friends:', err);
+        res.status(500).send('Error searching for friends');
+    }
+}
+
 exports.listorderfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
         console.log(userId);
         // Find the user by their ID
-        const listorder = await Follow.findOne({Accept: userId});
+        const listorder = await Follow.find({ Accept: userId })
+        .populate('Sender','username').
+        exec();
 
         if (!listorder) {
-            return res.status(404).json({ message: 'Ban khong co loi moi ket ban nao' });
+            return res.status(404).render('friend',{ message: 'Ban khong co loi moi ket ban nao', friends: null});
         }
         // Render trang danh sách bạn bè
-        res.status(200).json({ message: 'Danh sach nhung loi moi ket ban', friends: listorder, loggedInUserId: userId });
+        res.status(200).render('friend',{ message: 'Danh sach nhung loi moi ket ban', friends: listorder });
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -82,7 +99,7 @@ exports.addfriend = async (req, res) => {
         });
 
         if (existingRequest) {
-            return res.status(400).json({ message: 'Friend request already exists' });
+            return res.status(200).json({ message: 'Friend request already exists' });
         }
 
         const existingOrder = await Follow.findOne({
@@ -91,7 +108,7 @@ exports.addfriend = async (req, res) => {
         });
 
         if (existingOrder) {
-            return res.status(400).json({ message: 'Friend Order already exists' });
+            return res.status(200).json({ message: 'Friend Order already exists' });
         }
 
         const newFriendRequest = new Follow({ Sender: senderId, Accept: receiverId });
@@ -108,7 +125,7 @@ exports.acceptfriend = async (req, res) => {
     try {
         const senderId = req.session.userId;
         const { requestId } = req.body;
-        console.log(senderId);
+        console.log(requestId);
 
         // Tìm yêu cầu kết bạn
         const friendRequest = await Follow.findOne({
@@ -143,11 +160,9 @@ exports.acceptfriend = async (req, res) => {
 
         // Tạo bạn bè mới
         const newFriend = new Friend({ User1: senderId, User2: requestId });
-        const newFriend2 = new Friend({ User2: senderId, User1: requestId });
         await newFriend.save();
-        await newFriend2.save();
 
-        friendRequest.status = 'Accepted';
+        friendRequest.Status = 'Accepted';
         await friendRequest.save();
 
         // Tạo chat mới cho cả hai người
