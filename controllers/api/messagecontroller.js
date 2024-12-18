@@ -5,35 +5,8 @@ const media = require('../../models/media/media');
 const chatmember = require('../../models/chat/chatmember');
 const chat = require('../../models/chat/chat');
 
-exports.getChat = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const chatMembers = chatmember.find({ User: userId });
-    // tách lấy phần ID đoạn chat
 
-    // lấy thông tin đoạn chat
 
-    // lấy thông tin thành viên
-
-    // lấy tin nhắn mới nhất
-
-  } catch (error) {
-    console.log('get chat error:', error);
-    return res.status(500).json({ message: 'server error' });
-  }
-};
-/*
-app.put('/messages/:id/read', async (req, res) => {
-  try {
-    const { userId } = req.body;  // Lấy userId từ body request
-    const messageId = req.params.id;
-    await Message.findByIdAndUpdate(messageId, { $addToSet: { readBy: userId } });  // Thêm userId vào mảng readBy nếu chưa có
-    res.status(200).send({ message: 'Message marked as read.' });
-  } catch (error) {
-    res.status(500).send({ error: 'Failed to update message status.' });
-  }
-});
-*/
 
 exports.sendMessage = async (req, res) => {
   try {
@@ -88,7 +61,7 @@ exports.sendMessage = async (req, res) => {
 
 exports.getMessage = async (req, res) => {
   try {
-    const user1 = req.session.userId;
+    const userId = req.session.userId;
     const { chatId } = req.body;
 
     // Tìm chat
@@ -97,46 +70,50 @@ exports.getMessage = async (req, res) => {
       return res.status(404).json({ message: "Chat not found" });
     }
 
-    // Lấy danh sách các thành viên trong chat
-    const chatMembers = await chatmember.find({ Chat: chatId }).select('User');
-    const memberIds = chatMembers.map(member => member.User);
+    // Lấy thông tin đoạn chat, thành viên, tin nhắn mới nhất, và trạng thái đã đọc
+    const chats = await chat.aggregate([
+      // Lấy thông tin đoạn chat nằm trong chatIds
+      { $match: { _id: findchat._id } },
 
-    // Lấy 20 tin nhắn gần nhất của mỗi thành viên
-    const messagePromises = memberIds.map(async (memberId) => {
-      return await message.find({
-        chat: chatId,
-        senderId: memberId
-      })
-        .sort({ createdAt: -1 }) // Sắp xếp theo thời gian (tin mới nhất trước)
-        // .limit(20) // Giới hạn số lượng tin nhắn mỗi thành viên là 20
-        .populate('repliedmessage'); // Populate nếu cần thiết
-    });
+      // Liên kết với bảng ChatMember để lấy thông tin thành viên
+      {
+        $lookup: {
+          from: 'chatmembers', // Đảm bảo đúng tên collection
+          localField: '_id',
+          foreignField: 'Chat',
+          as: 'members',
+        },
+      },
 
-    // Chờ tất cả các lời hứa (promise) hoàn thành
-    const messages = await Promise.all(messagePromises);
+      // Dự án chỉ những trường cần thiết và lấy userId trong member
+      {
+        $project: {
+          _id: 1,
+          Chatpicture: 1,
+          name: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          Isgroup: 1,
+          members: {
+            $map: {
+              input: '$members',
+              as: 'member',
+              in: '$$member.User'
+            },
+          },
+          readBy: 1,
+        },
+      },
+    ]);
 
-    const mediaPromises = messages.flat().map(async (msg) => {
-      const mediaList = await messagemedia.find({
-        message: msg._id
-      }).populate('media');  // Populate để lấy chi tiết media
+    // Gán tin nhắn vào chat 
+    const chatWithMessages = await Promise.all(chats.map(async chat => { 
+      const messages = await getMessages(chat._id); 
+      return { ...chat, messages }; 
+    }));
 
-      // Gán danh sách media vào mỗi tin nhắn
-      return {
-        ...msg.toObject(),
-        media: mediaList.map(m => m.media)
-      };
-    });
-
-    const messagesWithMedia = await Promise.all(mediaPromises);
-
-    // Sắp xếp lại theo thời gian (nếu cần), từ tin nhắn cũ đến mới
-    const sortedMessages = messagesWithMedia.sort((a, b) => a.createdAt - b.createdAt);
-
-    res.status(200).json({
-      message: "Success",
-      data: sortedMessages
-
-    });
+    return res.status(200)(chatWithMessages);
+    
   } catch (error) {
     res.status(500).json({ message: "loi" + error.message });
   }
@@ -183,20 +160,4 @@ exports.deletemessage = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-};
-
-exports.createGroupChat = async (req, res) => {
-
-};
-
-exports.addMember = async (req, res) => {
-
-};
-
-exports.removeMember = async (req, res) => {
-
-};
-
-exports.changeNameGroup = async (req, res) => {
-
 };
