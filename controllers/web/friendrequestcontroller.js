@@ -167,7 +167,7 @@ exports.acceptfriend = async (req, res) => {
 
         // Tạo chat mới cho cả hai người
         const newChat = new chat({
-            name: `Chat between ${sender.name} and ${receiver.name}`
+            name: `Chat between ${sender.username} and ${receiver.username}`
         });
         await newChat.save();
 

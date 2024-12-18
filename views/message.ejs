@@ -22,7 +22,11 @@
                 <% if (Array.isArray(data) && data.length > 0) { %>
                     <% data.forEach(chat => { %>
                         <div class="chat-group">
-                            <button onclick="chat('<%= chat.Chat._id %>')" class="chat-button"><%= chat.Chat.name %></button>
+                            <% if (chat.Chat && chat.Chat._id) { %>
+                                <button onclick="chat('<%= chat.Chat._id %>')" class="chat-button"><%= chat.Chat.name %></button>
+                            <% } else { %>
+                                <span style="display: none;">No chat available</span>
+                            <% } %>
                         </div>
                     <% }) %>
                 <% } else { %>
@@ -62,7 +66,7 @@
                         appendMessage(message.content); // Thêm từng tin nhắn vào giao diện
                     });
                 } else {
-                    messageChat.innerHTML = '<p>Không có tin nhắn nào trong nhóm này.</p>';
+                    messageChat.innerHTML = '<p style="display: none;">Không có tin nhắn nào trong nhóm này.</p>';
                 }
             });
         }
