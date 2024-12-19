@@ -11,4 +11,6 @@ router.post(
     mediaController.createMedia // Xử lý logic tạo Media
 );
 
+router.get('/:mediaId', authMiddleware, mediaController.mediaDetails);
+
 module.exports = router;

@@ -18,7 +18,7 @@ exports.sendMessage = async (req, res) => {
       return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn" });
     }
 
-    if (content.length <= 0) {
+    if (content.length <= 0 && mediaIds.length <= 0) {
       return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn" });
     }
 
@@ -57,6 +57,7 @@ exports.sendMessage = async (req, res) => {
       data: newMessage
     });
   } catch (error) {
+    console.log('send messages error:', error);
     res.status(500).json({ message: error });
   }
 };
@@ -113,7 +114,6 @@ exports.getMessage = async (req, res) => {
       const messages = await getMessages(chat._id); 
       return { ...chat, messages }; 
     }));
-
     return res.status(200).json(chatWithMessages[0]);
 
   } catch (error) {

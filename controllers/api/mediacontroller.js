@@ -1,6 +1,7 @@
 const Media = require('../../models/media/media');
 const multer = require('multer');
 const path = require('path');
+const { getBaseURL } = require('../../lib/BaseURL');
 
 // Cấu hình multer để lưu trữ file
 const storage = multer.diskStorage({
@@ -52,3 +53,21 @@ exports.createMedia = async (req, res) => {
         res.status(500).json({ success: false, error: err.message });
     }
 };
+
+exports.mediaDetails = async (req, res) => {
+    try {
+        const baseUrl = await getBaseURL(req);
+        const { mediaId } = req.params;
+        const media = await Media.findById(mediaId);
+        if (media) {
+            return res.status(200).json({
+                _id: media._id,
+                MediaType: media.MediaType,
+                filepath: baseUrl + media.filepath
+            });
+        }
+        return res.status(404).json({ message: 'media not found' });
+    } catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+}

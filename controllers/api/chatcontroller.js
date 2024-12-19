@@ -9,7 +9,7 @@ exports.getChat = async (req, res) => {
 
     // Lấy danh sách các đoạn chat mà người dùng tham gia
     const chatMembers = await chatmember.find({ User: userId });
-    
+
     // Kiểm tra xem chatMembers có phải là một mảng không
     if (!Array.isArray(chatMembers)) {
       return res.status(500).json({ message: 'Server error: chatMembers is not an array.' });
@@ -55,8 +55,8 @@ exports.getChat = async (req, res) => {
     ]);
 
     // Kết hợp thông tin đoạn chat với tin nhắn mới nhất 
-    if (!chats || chats.length === 0) { 
-      return res.status(400).json({ message: 'No chat found' }); 
+    if (!chats || chats.length === 0) {
+      return res.status(400).json({ message: 'No chat found' });
     }
     // Sử dụng hàm getLastedMessage để lấy tin nhắn mới nhất
     const chatWithLastedMsg = await Promise.all(
@@ -68,7 +68,14 @@ exports.getChat = async (req, res) => {
         }
       })
     );
-    console.log(chatWithLastedMsg)
+
+    // Sắp xếp các đoạn chat theo latestMessage.createdAt 
+    chatWithLastedMsg.sort((a, b) => {
+      if (a.latestMessage && b.latestMessage) {
+        return new Date(b.latestMessage.createdAt) - new Date(a.latestMessage.createdAt);
+      }
+      return 0;
+    });
     res.status(200).json(chatWithLastedMsg);
   } catch (error) {
     console.log('get chat error:', error);
