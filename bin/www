@@ -15,40 +15,68 @@ var server = http.createServer(app);
 const socketIo = require('socket.io');
 const io = socketIo(server, {
   cors: {
-    origin: "http://yourfrontend.com", // Thay bằng domain frontend của bạn
+    origin: "*", // Cho phép tất cả các domain hoặc thay bằng domain frontend của bạn
     methods: ["GET", "POST"],
     credentials: true
   }
 });
 
-/**
- * Lắng nghe sự kiện kết nối từ client
- */
-io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+const message = require('../models/message/message');
+const messagemedia = require('../models/message/messagemedia');
+const messagelike = require('../models/message/messagelike');
+const media = require('../models/media/media');
+const chatmember = require('../models/chat/chatmember');
+const chat = require('../models/chat/chat');
 
-  // Sự kiện khi người dùng gửi tin nhắn
-  socket.on('message', (data) => {
-    console.log('Message from client:', data);
-    
-    // Phát lại tin nhắn tới tất cả các client khác (hoặc điều chỉnh theo nhu cầu)
-    io.emit('message', data);
+io.on('connection', (socket) => {
+  console.log('Socket connected');
+
+  socket.on('joinChat', async (chatId) => {
+    socket.join(chatId);
+    console.log(`User joined chat ${chatId}`);
+    try {
+        const findchat = await chat.findById(chatId);
+        if (!findchat) {
+            return; // Nếu không tìm thấy chat thì dừng lại
+        }
+
+        // Lấy danh sách các thành viên trong chat
+        const chatMembers = await chatmember.find({ Chat: chatId }).select('User');
+        const memberIds = chatMembers.map(member => member.User);
+
+        // Lấy tin nhắn của tất cả các thành viên
+        const messages = await message.find({})
+            .sort({ createdAt: -1 }) // Sắp xếp theo thời gian tạo tin nhắn từ cũ đến mới
+            .populate('repliedmessage')
+            .exec();
+        // Gửi tin nhắn đã sắp xếp
+        socket.emit('oldMessages', messages);
+
+    } catch (error) {
+        console.error("Error in try block:", error.message);
+    }
   });
 
-  // Sự kiện khi người dùng ngắt kết nối
+  socket.on('newMessage', async (message) => {
+    //console.log("Sending new message:", message);
+    socket.to(message.chat).emit('Messages', message); // Phát tán tin nhắn cho tất cả các client trong nhóm chat
+  });
+
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('User disconnected');
   });
 });
 
-// Cung cấp io cho app
+// Cung cấp io cho app để có thể sử dụng ở những phần khác trong ứng dụng
 app.set('socketio', io);
+
+// Cấu hình server lắng nghe trên port
 const host = '0.0.0.0';
-// Server lắng nghe trên port
-server.listen(port,host, () => {
+server.listen(port, host, () => {
   console.log(`Server is running on port ${port}`);
 });
 
+// Xử lý lỗi và sự kiện lắng nghe
 server.on('error', onError);
 server.on('listening', onListening);
 

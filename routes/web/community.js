@@ -15,6 +15,8 @@ router.get('/', authmiddleware, communitycontroller.getcommunity);
 router.get('/member', authmiddleware, communitycontroller.getMemberofCommunity);
 router.get('/page', authmiddleware, communitycontroller.getcommunitypagemanager);
 
+router.get('/search', authmiddleware, communitycontroller.searchCommunity);
+
 // routes/community.js
 router.get('/page/:communityId', communitycontroller.getCommunityPage);
 

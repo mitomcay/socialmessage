@@ -22,7 +22,8 @@
                 <li><a href="/community/page">Community</a></li>
                 <li>
                     <div class="search-bar">
-                        <input type="text" id="searchInput" placeholder="Search..." />
+                        <input type="text" id="searchInput" placeholder="Tìm cộng đồng..." />
+                        <div id="searchResults" class="search-results"></div> <!-- Kết quả tìm kiếm sẽ hiển thị ở đây -->
                     </div>
                 </li>
             </ul>
@@ -48,9 +49,8 @@
                         <li class="community-item">
                             <h3><%= cm.name %></h3>
                             <p><%= cm.description %></p>
-                            <!-- Tạo một nút để tham gia cộng đồng -->
                             <form action="/community/page/<%= cm._id %>" method="get">
-                                <button type="submit">Truy cap cộng đồng</button>
+                                <button type="submit">Truy cập cộng đồng</button>
                             </form>
                         </li>
                     <% }); %>
@@ -60,5 +60,31 @@
             </ul>
         </div>
     </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>     
+        document.getElementById('searchInput').addEventListener('input', async function () {
+            const query = this.value;
+            const searchResultsContainer = document.getElementById('searchResults');
+            try {
+                // Gửi yêu cầu tìm kiếm đến API
+                const response = await fetch(`/community/search?query=${query}`);
+                const data = await response.json();
+                // Kiểm tra có cộng đồng nào tìm thấy không
+                if (data.communities && data.communities.length > 0) {
+                    searchResultsContainer.innerHTML = data.communities.map(cm => 
+                        `<div class="search-result-item">
+                            <form action="/community/page/${cm._id}" method="get">
+                                <button type="submit"><label>${cm.name}</label></button>
+                            </form>
+                        </div>`
+                    ).join('');
+                } else {
+                    searchResultsContainer.innerHTML = '<p>Không tìm thấy cộng đồng nào.</p>';
+                }
+            } catch (error) {
+                searchResultsContainer.innerHTML = '<p>Đã xảy ra lỗi khi tìm kiếm cộng đồng.</p>';
+            }
+        });
+    </script>
 </body>
 </html>

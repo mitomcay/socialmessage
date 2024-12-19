@@ -5,20 +5,22 @@ const media = require('../../models/media/media');
 const chatmember = require('../../models/chat/chatmember');
 const chat = require('../../models/chat/chat');
 
+
 exports.sendMessage = async (req, res) => {
   try {
     const { content, chatId, repliedMessageId, mediaIds } = req.body;
     const senderId = req.session.userId;
 
-    if(content.length > 500){
-      return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn"});
+    // Kiểm tra độ dài tin nhắn
+    if (content.length > 500) {
+      return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn" });
     }
 
-    if(content.length <= 0){
-      return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn"});
+    if (content.length <= 0) {
+      return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn" });
     }
 
-    // Create the message
+    // Tạo tin nhắn
     const newMessage = await message.create({
       content,
       senderId,
@@ -26,35 +28,38 @@ exports.sendMessage = async (req, res) => {
       repliedmessage: repliedMessageId || null,
     });
 
-    // If there is media attached, create messagemedia entries
+    // Nếu có media, tạo liên kết với messagemedia
     if (mediaIds && mediaIds.length > 0) {
-      await Promise.all(mediaIds.map(async (mediaId) => {
-        return await messagemedia.create({
-          Chat: chatId,
-          media: mediaId,
-          message: newMessage._id
-        });
-      }));
+      await Promise.all(
+        mediaIds.map(async (mediaId) => {
+          return await messagemedia.create({
+            Chat: chatId,
+            media: mediaId,
+            message: newMessage._id,
+          });
+        })
+      );
     }
-    
-    const foundChat = await chat.findById(chatId);
-    if(!foundChat){
-      return res.status(400).json({ 
-        message: 'Group not found'
-      });
-    } 
-    // Gửi tin nhắn mới đến tất cả các client trong chat
-    const io = req.app.get('socketio');
-    io.to(chatId).emit('newMessage', newMessage); // Phát sự kiện mới cho tất cả các client trong chat
 
-    res.status(201).json({ 
-      message: 'Message sent successfully',
-      data: newMessage 
+    // Kiểm tra sự tồn tại của chat
+    const foundChat = await chat.findById(chatId);
+    if (!foundChat) {
+      return res.status(400).json({
+        message: "Group not found",
+      });
+    }
+
+    // Gửi phản hồi HTTP
+    res.status(201).json({
+      message: "Message sent successfully",
+      data: newMessage,
     });
+
   } catch (error) {
-    res.status(500).json({ message: error });
+    res.status(500).json({ message: error.message });
   }
 };
+
 
 exports.getMessage = async (req, res) => {
   try {
@@ -104,13 +109,30 @@ exports.getMessage = async (req, res) => {
 
     res.status(200).json({
       message: "Success",
-      data: sortedMessages
-      
+      data: sortedMessages,
+      chatId: chatId
     });
   } catch (error) {
     res.status(500).json({ message: "loi" + error.message });
   }
 };
+
+  exports.getMessagePage = async (req, res) => {
+    try {
+      const user1 = req.session.userId;
+
+      // Lấy danh sách các thành viên trong chat
+      const chatMembers = await chatmember.find({ User: user1 })
+      .populate('Chat','name').exec();
+
+      res.status(200).render('message',{
+        message: "Success",
+        data: chatMembers,
+      });
+    } catch (error) {
+      res.status(500).json({ message: "loi" + error.message });
+    }
+  };
 
 exports.likeMessage = async (req, res) => {
   try {

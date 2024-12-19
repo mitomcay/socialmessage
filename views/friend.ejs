@@ -3,51 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>Friend Manager</title>
+    <link rel="stylesheet" href="/stylesheets/friend.css">
 </head>
 <body>
-    <h1>Friends List</h1>
-    <% if (friends.length > 0) { %> <!-- Kiểm tra nếu có bạn bè để hiển thị danh sách -->
+    <header>
         <ul>
-            <% friends.forEach(friend => { %>
-                <li>
-                    <!-- Hiển thị username, email và trạng thái yêu cầu kết bạn -->
-                    RequestId: <%= friend._id %> - 
-                    Friend: <%= friend.friend.username %> (Email: <%= friend.friend.email %>) - 
-                    Status: <%= friend.status %>
-                </li>
-                <!-- Form để chấp nhận yêu cầu kết bạn nếu trạng thái là 'pending' và người nhận là người đang đăng nhập -->
-                <% if (friend.status === 'pending' && friend.friend._id.toString() === loggedInUserId.toString()) { %>
-                    <form action="/friend/acceptfriend" method="POST" class="accept-friend-form" data-request-id="<%= friend._id %>" style="display:inline;">
-                        <input type="hidden" name="requestId" value="<%= friend._id %>">
-                        <button type="submit">Accept</button>
-                    </form>
-                <% } %>
-            <% }); %>
+            <li><a href="/">Home</a></li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/message">Messages</a></li>
+            <li><a href="/community/page">Community</a></li>
+            <li><a href="/friend/Orderfriend">Friend</a></li>
         </ul>
-    <% } else { %> <!-- Nếu không có bạn bè, hiển thị thông báo -->
-        <p>No friend requests.</p>
-    <% } %>
+    </header>
+    <div class="content">
+        <h1 class="page-title">Friends Order</h1>
+        <% if (Array.isArray(friends) && friends.length > 0) { %>
+            <ul class="friend-list">
+                <% friends.forEach(friend => { %>
+                    <li class="friend-item">
+                        Friend: <%= friend.Sender.username %> - Status: <%= friend.Status %>
+                        <% if (friend.Status === 'Pending') { %>
+                            <button type="button" class="accept-btn" onclick="Accept('<%= friend.Sender._id %>')">Accept</button>
+                        <% } %>
+                    </li>
+                <% }); %>
+            </ul>
+        <% } else { %>
+            <p>No friends.</p>
+        <% } %>
+    </div>
+
+    <div class="friends">
+        <h2>Search for Friends</h2>
+        <div class="search-friends">
+            <input type="text" id="friend-search" placeholder="Search for friends..." />
+            <button type="button" class="search-btn" onclick="searchFriends()">Search</button>
+        </div>
+        <div id="search-results"></div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Friend Manager</p>
+    </footer>
+
     <script>
-        // Xử lý gửi form chấp nhận yêu cầu kết bạn
-        document.querySelectorAll('.accept-friend-form').forEach(form => {
-            form.addEventListener('submit', async (event) => {
-                event.preventDefault(); // Ngăn việc gửi form theo cách truyền thống
-                
-                const formData = new FormData(form);
-                const response = await fetch(form.action, {
-                    method: form.method,
-                    body: formData
-                });
-
-                const result = await response.json();
-                alert(result.message); // Hiển thị thông báo từ phản hồi JSON
-
-                if (response.ok) {
-                    window.location.reload(); // Tải lại trang để cập nhật danh sách
+        // Function to accept friend request
+        async function Accept(requestId) {
+            const response = await fetch('/friend/acceptfriend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requestId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    window.location.reload();
+                } else {
+                    alert(data.message);
                 }
-            });
-        });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Function to search for friends
+        function searchFriends() {
+            const searchInput = document.getElementById('friend-search').value;
+
+            if (!searchInput) {
+                alert('Please enter a name to search.');
+                return;
+            }
+
+            fetch(`/friend/search?name=${encodeURIComponent(searchInput)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('search-results');
+                    resultsDiv.innerHTML = '';
+
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = '<p>No friends found.</p>';
+                        return;
+                    }
+
+                    data.forEach(friend => {
+                        const friendElement = document.createElement('div');
+                        friendElement.classList.add('friend-item');
+                        friendElement.innerHTML = `
+                            <p>${friend.username}</p>
+                            <button class="add-btn" onclick="sendFriendRequest('${friend._id}')">Send Friend Request</button>
+                        `;
+                        resultsDiv.appendChild(friendElement);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Function to send friend request
+        function sendFriendRequest(receiverId) {
+            fetch('/friend/addfriend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receiverId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
     </script>
 </body>
 </html>

@@ -1,81 +1,130 @@
-/* Reset mọi margin và padding */
+/* Reset styles */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-  
-  /* Cài đặt nền và font chữ toàn trang */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body styling */
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 20px;
+  line-height: 1.6;
+}
+
+/* Header styles */
+header {
+  background-color: #007bff;
+  padding: 10px 0;
+  margin-bottom: 30px;
+}
+
+header ul {
+  list-style-type: none;
+  text-align: center;
+}
+
+header ul li {
+  display: inline-block;
+  margin-right: 20px;
+}
+
+header ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 1.1rem;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+header ul li a:hover {
+  background-color: #0056b3;
+}
+
+/* Page content styling */
+h1 {
+  font-size: 2rem;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Posts list styling */
+h2 {
+  font-size: 1.6rem;
+  color: #007bff;
+  margin-bottom: 20px;
+}
+
+ul {
+  list-style-type: none;
+}
+
+ul li {
+  background-color: #ffffff;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+ul li:hover {
+  transform: translateY(-5px);
+}
+
+ul li h3 {
+  font-size: 1.3rem;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+ul li div {
+  font-size: 1.1rem;
+  color: #007bff;
+  margin-bottom: 10px;
+}
+
+ul li p {
+  font-size: 1.1rem;
+  color: #666;
+}
+
+/* Media query for responsiveness */
+@media screen and (max-width: 768px) {
   body {
-    font-family: Arial, sans-serif;
-    line-height: 1.6;
-    background-color: #f4f4f9;
-    color: #333;
-    padding: 20px;
-    margin: 0;
+      padding: 10px;
   }
-  
-  /* Định dạng tiêu đề chính */
+
   h1 {
-    font-size: 2.5rem;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    text-align: center;
+      font-size: 1.8rem;
   }
-  
-  /* Định dạng mô tả của cộng đồng */
-  p {
-    font-size: 1.2rem;
-    color: #555;
-    margin-bottom: 30px;
-    text-align: center;
-  }
-  
-  /* Định dạng tiêu đề phụ */
+
   h2 {
-    font-size: 1.8rem;
-    margin-top: 20px;
-    color: #2980b9;
-    margin-bottom: 20px;
+      font-size: 1.4rem;
   }
-  
-  /* Định dạng danh sách bài viết */
-  ul {
-    list-style-type: none;
-    padding: 0;
+
+  ul li {
+      padding: 10px;
   }
-  
-  li {
-    background-color: #fff;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+  ul li h3 {
+      font-size: 1.2rem;
   }
-  
-  li h3 {
-    font-size: 1.5rem;
-    color: #34495e;
-    margin-bottom: 10px;
+
+  ul li div {
+      font-size: 1rem;
   }
-  
-  li div {
-    font-size: 1.1rem;
-    color: #7f8c8d;
-    margin-bottom: 10px;
+
+  ul li p {
+      font-size: 1rem;
   }
-  
-  li p {
-    font-size: 1.1rem;
-    color: #2c3e50;
-    line-height: 1.6;
-  }
-  
-  /* Xử lý thông báo không có bài viết */
-  .no-posts {
-    font-size: 1.2rem;
-    color: #e74c3c;
-    text-align: center;
-    margin-top: 20px;
-  }
-  
+}
