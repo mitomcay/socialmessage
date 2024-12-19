@@ -4,6 +4,7 @@ const messagelike = require('../../models/message/messagelike');
 const media = require('../../models/media/media');
 const chatmember = require('../../models/chat/chatmember');
 const chat = require('../../models/chat/chat');
+const { getMessages } = require('../../lib/messageLib');
 
 
 
@@ -19,6 +20,13 @@ exports.sendMessage = async (req, res) => {
 
     if (content.length <= 0) {
       return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn" });
+    }
+
+    const foundChat = await chat.findById(chatId);
+    if (!foundChat) {
+      return res.status(400).json({
+        message: 'Chat not found'
+      });
     }
 
     // Create the message
@@ -40,12 +48,6 @@ exports.sendMessage = async (req, res) => {
       }));
     }
 
-    const foundChat = await chat.findById(chatId);
-    if (!foundChat) {
-      return res.status(400).json({
-        message: 'Group not found'
-      });
-    }
     // Gửi tin nhắn mới đến tất cả các client trong chat
     const io = req.app.get('socketio');
     io.to(chatId).emit('newMessage', newMessage); // Phát sự kiện mới cho tất cả các client trong chat
@@ -62,7 +64,7 @@ exports.sendMessage = async (req, res) => {
 exports.getMessage = async (req, res) => {
   try {
     const userId = req.session.userId;
-    const { chatId } = req.body;
+    const { chatId } = req.params;
 
     // Tìm chat
     const findchat = await chat.findById(chatId);
@@ -112,9 +114,10 @@ exports.getMessage = async (req, res) => {
       return { ...chat, messages }; 
     }));
 
-    return res.status(200)(chatWithMessages);
-    
+    return res.status(200).json(chatWithMessages[0]);
+
   } catch (error) {
+    console.log('get messages error:', error);
     res.status(500).json({ message: "loi" + error.message });
   }
 };
