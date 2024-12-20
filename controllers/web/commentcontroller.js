@@ -12,7 +12,7 @@ exports.getComment = async(req, res) => {
     }
 
     const { postId } = req.body;
-    console.log(postId); // Lấy từ query thay vì body
+    console.log('1',postId);
     if (!postId) {
         return res.status(400).json({ error: 'postId is required' });
     }
@@ -37,6 +37,7 @@ exports.postComment = async(req, res) => {
     }
 
     const postId = req.body.postId;
+    console.log('day la :', postId);
     if (!postId) {
         return res.status(400).json({ error: 'postId is required' });
     }

@@ -87,7 +87,7 @@ exports.getmypost = async (req, res) => {
         post: post,
         media: media
       });
-      //console.log(post);
+      //console.log(postsWithMedia);
     }
 
     return res.status(200).json({ message: 'List your post', posts: postsWithMedia });
@@ -193,7 +193,7 @@ exports.getlikepost = async (req, res) => {
     const { postId } = req.body;
     
     // Check if the user has already liked the post
-    const existinglikepost = await postlike.findOne({
+    const existinglikepost = await postlike.find({
       post: postId,
       User: userId,
     });

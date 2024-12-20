@@ -10,6 +10,23 @@ body {
     background-color: #f4f4f4;
 }
 
+.search-friends input{
+    border-radius: 12px 0 0 12px;
+    padding: 8px;
+}
+
+.search-friends button{
+    border-radius: 0 12px 12px 0;
+    color: black;
+    background-color: aqua;
+    border: none;
+    padding: 10px;
+}
+
+.search-friends button:hover {
+    background-color: #35ccae;
+}
+
 section {
     padding: 10px;
     
