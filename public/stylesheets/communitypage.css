@@ -16,9 +16,10 @@ body {
 
 /* Header styles */
 header {
-  background-color: #007bff;
+  background-color: #00aeff;
   padding: 10px 0;
   margin-bottom: 30px;
+  border-radius: 12px;
 }
 
 header ul {
@@ -33,7 +34,7 @@ header ul li {
 
 header ul li a {
   text-decoration: none;
-  color: white;
+  color: rgb(0, 0, 0);
   font-size: 1.1rem;
   padding: 8px 15px;
   border-radius: 5px;
@@ -42,6 +43,7 @@ header ul li a {
 
 header ul li a:hover {
   background-color: #0056b3;
+  color: white;
 }
 
 /* Page content styling */
@@ -49,12 +51,23 @@ h1 {
   font-size: 2rem;
   color: #333;
   margin-bottom: 15px;
+  text-align: center;
+}
+
+.community-header {
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 40px;
+  text-align: center;
+  height: 300px; /* Điều chỉnh chiều cao nếu cần */
 }
 
 p {
   font-size: 1.1rem;
   color: #666;
   margin-bottom: 30px;
+  text-align: center;
 }
 
 /* Posts list styling */

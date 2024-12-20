@@ -2,9 +2,10 @@ const express = require('express');
 const router = express.Router();
 var authmiddleware = require('../../middlewares/web/authMiddleware');
 const communitycontroller = require('../../controllers/web/communitycontroller');
+const upload = require('../../middlewares/web/upload'); 
 
 // Tao cong dong
-router.post('/create', authmiddleware, communitycontroller.createcomunity);
+router.post('/create', communitycontroller.createcomunity);
 
 // Xóa cộng đồng
 router.post('/delete', communitycontroller.deleteCommunity);

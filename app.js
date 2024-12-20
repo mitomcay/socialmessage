@@ -29,6 +29,8 @@ var chatwebRouter = require('./routes/web/chat');
 var messagewebRouter = require('./routes/web/message'); 
 var googleAuthRoutes = require('./routes/web/auth/googleAuth');
 var commentwebRouter = require('./routes/web/comment')
+var EditprofilewebRoutes = require('./routes/web/editprofile');
+var settingwebRouter = require('./routes/web/setting');
 
 // routes cho mobile
 var indexapiRouter = require('./routes/api/index');
@@ -68,8 +70,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(session({
   store: MongoStore.create({
-    mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB
-    ///mongoUrl: 'mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
+    ///mongoUrl: 'mongodb://localhost:27017/social_network', // URL của MongoDB
+    mongoUrl: 'mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
     collectionName: 'sessions' // Tên collection lưu session
   }),
   secret: '90435878234789230', // Thay thế bằng một khóa bí mật của bạn
@@ -101,6 +103,8 @@ app.use('/chat', chatwebRouter);
 app.use('/community', communitywebRouter);
 app.use('/message', messagewebRouter);
 app.use('/comment', commentwebRouter);
+app.use('/settings', settingwebRouter);
+app.use('/edit', EditprofilewebRoutes);
 
 // app.use api
 app.use('/api', indexapiRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập
@@ -130,16 +134,17 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-mongoose.connect('mongodb://localhost:27017/social_network').then(() => {
-  console.log('Connected to MongoDB');
-}).catch((error) => {
-  console.error('MongoDB connection error:', error);
-});
-/*
-mongoose.connect('mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+/*mongoose.connect('mongodb://localhost:27017/social_network').then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {
   console.error('MongoDB connection error:', error);
 });
 */
+
+mongoose.connect('mongodb+srv://giangvanhung2003:OFagcNJwOEgspTVj@cluster0.0ihsp.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+  console.log('Connected to MongoDB');
+}).catch((error) => {
+  console.error('MongoDB connection error:', error);
+});
+
 module.exports = app;

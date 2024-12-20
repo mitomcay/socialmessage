@@ -16,6 +16,8 @@ exports.getallpost = async (req, res) => {
       .populate('Community', 'name') // Lấy thông tin cộng đồng (chỉ tên)
       .exec();
 
+    //console.log('Posts:', mypost); // In ra danh sách bài viết
+
     if (!mypost || mypost.length === 0) {
       return res.status(400).json({ message: 'No post found' });
     }
@@ -27,6 +29,8 @@ exports.getallpost = async (req, res) => {
       const postMedia = await postmedia.find({
         Post: post._id
       }).populate('media', 'filename filepath MediaType').exec();
+
+      //console.log('Post Media:', postMedia); // In ra thông tin media của bài viết
 
       let media = [];
       postMedia.forEach(postMediaItem => {
@@ -42,6 +46,7 @@ exports.getallpost = async (req, res) => {
         post: post,
         media: media,
       });
+      //console.log(postsWithMedia);
     }
 
     return res.status(200).json({ message: 'List your post', posts: postsWithMedia });
@@ -82,6 +87,7 @@ exports.getmypost = async (req, res) => {
         post: post,
         media: media
       });
+      //console.log(post);
     }
 
     return res.status(200).json({ message: 'List your post', posts: postsWithMedia });
@@ -141,21 +147,25 @@ exports.pushpost = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized: Please log in' });
     }
 
-    const { content, community } = req.body;
+    const { content } = req.body;
+    const community = req.body.community.trim();
+
     let { mediaIds } = req.body;
-    console.log(content, community);
-  
+    //console.log(content, community);
+
     // Tạo bài post mới
     const newPost = new Post({
       Author: userId,
       Community: community,
       content: content,
-      IsCommunityPost: community ? true : false,
+      IsCommunityPost: community != null ? true : false,
     });
 
     await newPost.save();
 
-    mediaIds.forEach(mediaId => {
+    if (Array.isArray(mediaIds)) {
+    
+      mediaIds.forEach(mediaId => {
       const newPostMedia = new postmedia({
         Post: newPost._id,  // Liên kết với bài đăng
         media: mediaId,  // Liên kết với media
@@ -164,6 +174,9 @@ exports.pushpost = async (req, res) => {
   
       newPostMedia.save();
     });
+    } else {
+        console.log('No media files to process.');
+    }
 
     return res.status(200).json({
       message: 'Post created successfully',
@@ -228,3 +241,25 @@ exports.likepost = async (req, res) => {
   }
 };
 
+exports.searchpost = async (req, res) => {
+  try{
+    const { query } = req.query;
+    //console.log(query);
+
+    const findpost = await Post.find({ content: { $regex: query, $options: 'i' }})
+    .populate('Author','username')
+    .populate('Community','name')
+    .exec();
+
+    if (findpost.length === 0) {
+      return res.status(404).json({ message: 'No posts found', posts: [] });
+    }
+    //console.log(findpost);
+    
+    return res.status(200).json({message:'sucess', posts: findpost});
+  }catch(error){
+    console.log(error);
+    return res.status(500).send('Internal Server Error');
+  }
+ 
+}

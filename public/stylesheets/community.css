@@ -14,11 +14,12 @@ body {
 
 /* Navigation styles */
 nav {
-    background-color: #2d2d2d;
+    background-color: #23bbf2;
     padding: 15px 30px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-radius: 12px;
 }
 
 nav .logo {
@@ -39,6 +40,7 @@ nav .logo {
     background-color: #fff;
     padding: 20px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
 }
 
 .sidebar ul {

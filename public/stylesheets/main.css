@@ -11,13 +11,15 @@ body {
 }
 
 section {
-    padding: 20px;
+    padding: 10px;
+    
 }
 
 nav {
-    background-color: #333;
+    background-color: #1bb6e6;
     color: white;
     padding: 10px;
+    border-radius: 12px;
 }
 
 nav .logo {
@@ -37,6 +39,7 @@ nav .logo {
     display: flex;
     justify-content: space-between;
     margin-top: 20px;
+    background-color: aliceblue;
 }
 
 .sidebar {

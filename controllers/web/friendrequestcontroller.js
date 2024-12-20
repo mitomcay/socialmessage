@@ -7,16 +7,31 @@ const chatmember = require('../../models/chat/chatmember');
 exports.listfriend = async (req, res) => {
     try {
         const userId = req.session.userId;
-        console.log(userId);
-        // Find the user by their ID
-        const listfriend = await Friend.findOne({ User1: userId });
 
-        if (!listfriend) {
-            return res.status(404).render('friend',{ message: 'you have been not friend', friends: null});
+        // Find the friends where the user is either User1 or User2
+        const listfriendUser1 = await Friend.find({ User1: userId }).populate('User2', 'username');
+        const listfriendUser2 = await Friend.find({ User2: userId }).populate('User1', 'username');
+
+        // Combine the lists of friends from both sides into a single array
+        const allfriend = [
+            ...listfriendUser1.map(friend => ({
+                username: friend.User2.username,
+                friendshipType: friend.FriendshipType,
+            })),
+            ...listfriendUser2.map(friend => ({
+                username: friend.User1.username,
+                friendshipType: friend.FriendshipType,
+            })),
+        ];
+
+        if (allfriend.length === 0) {
+            return res.status(404).json({ message: 'You have no friends.', friends: [] });
         }
 
-        // Render trang danh sách bạn bè
-        res.status(200).render('friend',{ message: 'List of Friends', friends: listfriend, loggedInUserId: userId });
+        console.log(allfriend);
+        // Send the combined friend list
+        res.status(200).json({ message: 'List of Friends', friends: allfriend });
+
     } catch (err) {
         console.error(err);
         res.status(500).json({ message: 'Server error' });
@@ -43,18 +58,40 @@ exports.listrequestfriend = async (req, res) => {
 
 exports.searchfriend = async (req, res) => {
     const { name } = req.query;
-
+    const my = req.session.userId;
     try {
+        // Tìm tất cả người dùng theo tên (không phân biệt hoa thường)
         const users = await User.find({ 
-            username: { $regex: name, $options: 'i' } // Tìm tên theo chuỗi nhập vào (không phân biệt hoa thường)
+            username: { $regex: name, $options: 'i' } 
         });
 
-        res.json(users);
+        // Lấy thông tin bạn bè của người dùng
+        const usersWithFriendStatus = [];
+
+        for (const user of users) {
+            // Kiểm tra xem người dùng có phải là bạn với 'my' hay không
+            const checkfriends = await Friend.find({ User1: my, User2: user._id });
+            const checkfriendsreverts = await Friend.find({ User2: my, User1: user._id });
+
+            // Kiểm tra nếu có kết quả trong cả 2 truy vấn, người này là bạn của 'my'
+            const isFriend = checkfriends.length > 0 || checkfriendsreverts.length > 0;
+
+            // Thêm thông tin bạn bè vào đối tượng người dùng
+            usersWithFriendStatus.push({
+                ...user.toObject(), // Chuyển đổi đối tượng Mongoose thành đối tượng thông thường
+                isFriend: isFriend // Thêm trạng thái bạn bè
+            });
+        }
+
+        // Trả về thông tin người dùng kèm trạng thái bạn bè
+        res.json(usersWithFriendStatus);
+
     } catch (err) {
         console.error('Error searching for friends:', err);
         res.status(500).send('Error searching for friends');
     }
 }
+
 
 exports.listorderfriend = async (req, res) => {
     try {

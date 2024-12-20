@@ -18,7 +18,7 @@
             <ul>
                 <li><a href="/">Home</a></li>
                 <li><a href="/profile">Profile</a></li>
-                <li><a href="/messages">Messages</a></li>
+                <li><a href="/message">Messages</a></li>
                 <li><a href="/community/page">Community</a></li>
                 <li>
                     <div class="search-bar">
@@ -33,9 +33,13 @@
             <h1>Quản lý Cộng đồng</h1>
 
             <!-- Form tạo cộng đồng mới -->
-            <form action="/community/create" method="POST">
-                <input type="text" name="name" placeholder="Tên cộng đồng" required>
+            <form id="postForm" enctype="multipart/form-data">
+                <input type="text" name="name" id="name" placeholder="Tên cộng đồng" required>
                 <textarea name="description" placeholder="Mô tả cộng đồng" required></textarea>
+                <div id="uploadForm">
+                    <label for="media">Avatar Community</label>
+                    <input type="file" id="mediaInput" name="media" accept="image/*, video/*" />
+                </div>
                 <label for="isPrivate">Cộng đồng riêng tư</label>
                 <input type="checkbox" name="Isprivate" id="isPrivate">
                 <button type="submit">Tạo cộng đồng</button>
@@ -46,13 +50,20 @@
             <ul>
                 <% if (community && Array.isArray(community)) { %> 
                     <% community.forEach(function(cm) { %>
-                        <li class="community-item">
-                            <h3><%= cm.name %></h3>
-                            <p><%= cm.description %></p>
-                            <form action="/community/page/<%= cm._id %>" method="get">
-                                <button type="submit">Truy cập cộng đồng</button>
-                            </form>
-                        </li>
+                        <% if(cm._id != "67651ab7d883a8fa98ebfac4") { %>
+                            <li class="community-item">
+                                <h3><%= cm.name %></h3>
+                                <p><%= cm.description %></p>
+                                <% if (cm.CommunityPicture) { %>
+                                    <img src="<%= cm.CommunityPicture?.filepath %>" alt="Community Picture">
+                                <% } else { %>
+                                    <p>Không có hình ảnh cộng đồng.</p>
+                                <% } %>
+                                <form action="/community/page/<%= cm._id %>" method="get">
+                                    <button type="submit">Truy cập cộng đồng</button>
+                                </form>
+                            </li>
+                        <% } %>
                     <% }); %>
                 <% } else { %>
                     <p>Không có cộng đồng nào để hiển thị.</p>
@@ -70,14 +81,18 @@
                 const response = await fetch(`/community/search?query=${query}`);
                 const data = await response.json();
                 // Kiểm tra có cộng đồng nào tìm thấy không
-                if (data.communities && data.communities.length > 0) {
-                    searchResultsContainer.innerHTML = data.communities.map(cm => 
-                        `<div class="search-result-item">
-                            <form action="/community/page/${cm._id}" method="get">
-                                <button type="submit"><label>${cm.name}</label></button>
-                            </form>
-                        </div>`
-                    ).join('');
+                if (data.communities && data.communities.length > 0 ) {
+                    searchResultsContainer.innerHTML = data.communities.map(cm => {
+                        if (cm._id !== "67651ab7d883a8fa98ebfac4") {
+                            return `
+                                <div class="search-result-item">
+                                    <form action="/community/page/${cm._id}" method="get">
+                                        <button type="submit"><label>${cm.name}</label></button>
+                                    </form>
+                                </div>
+                            `;
+                        }
+                }).join('');
                 } else {
                     searchResultsContainer.innerHTML = '<p>Không tìm thấy cộng đồng nào.</p>';
                 }
@@ -85,6 +100,80 @@
                 searchResultsContainer.innerHTML = '<p>Đã xảy ra lỗi khi tìm kiếm cộng đồng.</p>';
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('postForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const name = this.querySelector('input[name="name"]').value;
+                const description = this.querySelector('textarea[name="description"]').value;
+                let mediaInput = document.getElementById('mediaInput').files;
+                const isPrivate = this.querySelector('input[name="Isprivate"]').checked;
+
+                let mediaIds = []; // Khai báo mảng mediaIds để lưu trữ id của các media đã tải lên
+
+                if (mediaInput.length > 0) {
+                    const uploadPromises = Array.from(mediaInput).map(async (file) => {
+                        const formData = new FormData();
+                        formData.append('media', file);
+                        let mediaType = '';
+                        if (file.type.startsWith('image/')) {
+                            mediaType = 'Image';
+                        } else if (file.type.startsWith('video/')) {
+                            mediaType = 'Video';
+                        } else if (file.type.startsWith('audio/')) {
+                            mediaType = 'Audio';
+                        }
+                        formData.append('MediaType', mediaType);
+
+                        try {
+                            const response = await fetch('/api/media/upload', {
+                                method: 'POST',
+                                body: formData,
+                            });
+                            const result = await response.json();
+
+                            if (response.ok && result.success) {
+                                const media = result.data;
+                                mediaIds.push(media._id); // Lưu id của media vào mảng mediaIds
+                            } else {
+                                alert(`Failed to upload media: ${result.error}`);
+                            }
+                        } catch (err) {
+                            console.error('Error uploading file:', err);
+                        }
+                    });
+
+                    await Promise.all(uploadPromises); // Chờ tất cả các upload hoàn thành
+                }
+
+                // Gửi dữ liệu cộng đồng lên server
+                try {
+                    const postResponse = await fetch('/community/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name,
+                            description,
+                            Isprivate: isPrivate, // Gửi giá trị checkbox isPrivate
+                            CommunityPicture: mediaIds, // Gửi id của các media đã tải lên
+                        }),
+                    });
+
+                    if (postResponse.ok) {
+                        alert('Post created successfully!');
+                        window.location.reload();
+                    } else {
+                        alert('Failed to create post.');
+                    }
+                } catch (err) {
+                    console.error('Error creating post:', err);
+                }
+            });
+        });
+
     </script>
 </body>
 </html>

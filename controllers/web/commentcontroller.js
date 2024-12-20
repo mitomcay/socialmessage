@@ -11,7 +11,8 @@ exports.getComment = async(req, res) => {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const postId = req.params.postId; // Lấy từ query thay vì body
+    const { postId } = req.body;
+    console.log(postId); // Lấy từ query thay vì body
     if (!postId) {
         return res.status(400).json({ error: 'postId is required' });
     }
@@ -20,7 +21,7 @@ exports.getComment = async(req, res) => {
     .populate('Author', 'username') // Lấy thông tin tác giả
     .exec();
 
-    res.status(200).json({ comments });
+    return res.status(200).json({ comments: comments });
   } catch (error) {
       console.error('Error fetching comments:', error);
       res.status(500).json({ error: 'Internal server error' });

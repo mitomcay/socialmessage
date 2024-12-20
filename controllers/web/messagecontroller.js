@@ -82,7 +82,7 @@ exports.getMessage = async (req, res) => {
         chat: chatId,
         senderId: memberId
       })
-      .sort({ createdAt: -1 }) // Sắp xếp theo thời gian (tin mới nhất trước)
+      //.sort({ createdAt: -1 }) // Sắp xếp theo thời gian (tin mới nhất trước)
       // .limit(20) // Giới hạn số lượng tin nhắn mỗi thành viên là 20
       .populate('repliedmessage'); // Populate nếu cần thiết
     });

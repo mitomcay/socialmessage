@@ -4,7 +4,7 @@ var authmiddleware = require('../../middlewares/web/authMiddleware');
 const commentcontroller = require('../../controllers/web/commentcontroller');
 
 router.post('/', authmiddleware, commentcontroller.postComment);
-router.get('/:postId', authmiddleware, commentcontroller.getComment);
+router.post('/getcomment', authmiddleware, commentcontroller.getComment);
 router.post('/like/:commentId', authmiddleware, commentcontroller.likeComment);
 
 module.exports = router;

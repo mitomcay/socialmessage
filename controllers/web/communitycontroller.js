@@ -1,17 +1,19 @@
 const community = require("../../models/community/community");
 const communitymember = require("../../models/community/communitymember");
 const post = require('../../models/post/post');
+const postmedia = require('../../models/post/postmedia');
 
 exports.createcomunity = async (req, res) => {
   try {
-    const { name, description, Isprivate } = req.body;
+    const { name, description, Isprivate, CommunityPicture } = req.body;
     const creatorId = req.session.userId; 
 
-    const isPrivate = Isprivate === 'true'; 
-
+    const isPrivate = Isprivate; 
+    console.log('isPrivate', isPrivate);
     // Tạo cộng đồng mới
     const newcommunity = await community.create({ 
-      name, description, Isprivate: isPrivate 
+      name, description, Isprivate: isPrivate,
+      CommunityPicture: CommunityPicture,
     });
     await newcommunity.save();
 
@@ -70,7 +72,9 @@ exports.getcommunitypagemanager = async (req, res) => {
       }
 
       // Tìm cộng đồng dựa trên ID cộng đồng trong communityMember
-      const foundCommunity = await community.find({ community: communityMember.Community});
+      const foundCommunity = await community.find({ community: communityMember.Community})
+      .populate('CommunityPicture','filepath')
+      .exec();
 
       if (!foundCommunity) {
         return res.status(200).render('community', { community: null });
@@ -191,16 +195,52 @@ exports.getCommunityPage = async (req, res) => {
     const { communityId } = req.params;
     console.log(communityId);
     // Tìm cộng đồng theo ID
-    const foundCommunity = await community.findById( communityId );
+    const foundCommunity = await community.findById( communityId )
+    .populate('CommunityPicture','filepath')
+    .exec();
     if (!foundCommunity) {
       return res.status(404).json({ message: "Cộng đồng không tồn tại" });
     }
 
     // Tìm tất cả bài viết thuộc cộng đồng này
-    const posts = await post.find({ Community: communityId });
+    const posts = await post.find({ Community: communityId })
+    .populate('Community','name')
+    .populate('Author','username')
+    .exec();
+    //console.log(posts);
 
+    if (!posts || posts.length === 0) {
+      return res.status(400).render('communityPage',{ message: 'No post found' });
+    }
+
+    let postsWithMedia = [];
+
+    for (let post of posts) {
+      // Lấy tất cả media liên quan đến bài viết
+      const postMedia = await postmedia.find({
+        Post: post._id
+      }).populate('media', 'filename filepath MediaType').exec();
+
+      //console.log('Post Media:', postMedia); // In ra thông tin media của bài viết
+
+      let media = [];
+      postMedia.forEach(postMediaItem => {
+        media.push({
+          filename: postMediaItem.media.filename,
+          filepath: postMediaItem.media.filepath.replace(/\\/g, '/'), // Fix đường dẫn
+          MediaType: postMediaItem.media.MediaType
+        });
+      });
+      
+      // Thêm thông tin bài viết, media và cộng đồng
+      postsWithMedia.push({
+        post: post,
+        media: media,
+      });
+      console.log(postsWithMedia);
+    }
     // Hiển thị trang cộng đồng với các bài viết
-    res.render('communityPage', { community: foundCommunity, posts: posts });
+    res.render('communityPage', { community: foundCommunity, posts: postsWithMedia });
   } catch (error) {
     res.status(500).json({ message: "Error: " + error.message });
   }
