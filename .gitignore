@@ -7,6 +7,3 @@ uploads/
 # Bỏ qua các tệp tạm thời
 *.log
 *.tmp
-
-# Bỏ qua các tệp cấu hình môi trường
-.env
