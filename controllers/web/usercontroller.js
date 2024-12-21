@@ -66,7 +66,7 @@ exports.handleLogin = async (req, res) => {
                     loginAttempts[username] = { count: 0, firstAttempt: currentTime };
                 }
                 loginAttempts[username].count++;
-                return res.render('login', { message: 'Incorrect password' });
+                return res.render('login', { message: 'Incorrect password'});
             }
         } else {
             return res.render('login', { message: "User not found" });

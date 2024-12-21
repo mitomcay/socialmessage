@@ -6,10 +6,10 @@ const { post } = require('../../routes/web/comment');
 
 exports.getComment = async(req, res) => {
   try{
-    const userId = req.session.userId;
-    if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
+    // const userId = req.session.userId;
+    // if (!userId) {
+    //   return res.status(401).json({ error: 'Unauthorized' });
+    // }
 
     const { postId } = req.body;
     console.log('1',postId);
@@ -26,7 +26,6 @@ exports.getComment = async(req, res) => {
       console.error('Error fetching comments:', error);
       res.status(500).json({ error: 'Internal server error' });
   }
-
 }
 
 exports.postComment = async(req, res) => {
@@ -37,7 +36,8 @@ exports.postComment = async(req, res) => {
     }
 
     const postId = req.body.postId;
-    console.log('day la :', postId);
+    //console.log('day la :', postId);
+
     if (!postId) {
         return res.status(400).json({ error: 'postId is required' });
     }
@@ -54,6 +54,8 @@ exports.postComment = async(req, res) => {
       post: postId,
       Author: userId,
       RepliedCommentNavigation: RepliedCommentNavigation ? null : RepliedCommentNavigation,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     await comments.save();

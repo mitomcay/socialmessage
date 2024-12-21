@@ -16,7 +16,45 @@ exports.showprofilepages = async (req, res) => {
             avatar: user.avatar // Đường dẫn ảnh đại diện
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);  // Log the error for debugging purposes
+        res.status(400).json({ message: error.message });
+    }
+};
+
+exports.showprofilepagefriend = async (req, res) => {
+    try {
+        const MyuserId = req.session.userId;
+        const userid = req.params.userId;
+        console.log(userid);
+        let user; // Declare user variable here to ensure it's available for rendering
+        
+        if (MyuserId == userid) {
+            user = await User.findById(MyuserId); 
+            if (!user) {
+                return res.status(404).json({ message: 'User not found!' });
+            }
+            res.render('profile', {
+                title: `Profile - ${user.username}`,
+                content: 'profile',
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar // Đường dẫn ảnh đại diện
+            });
+        } else {
+            user = await User.findById(userid);
+            if (!user) {
+                return res.status(404).json({ message: 'User not found!' });
+            }
+            res.render('profilefriend', {
+                title: `Profile - ${user.username}`,
+                content: 'profile',
+                username: user.username,
+                email: user.email,
+                avatar: user.avatar ? user.avatar : '/images/defaultavatar.jpg', // Đường dẫn ảnh đại diện
+            });
+        }
+    } catch (error) {
+        console.error(error);  // Log the error for debugging purposes
         res.status(400).json({ message: error.message });
     }
 };

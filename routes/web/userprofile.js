@@ -16,7 +16,9 @@ var upload = multer({ storage: storage }); // Khởi tạo multer
 
 /* GET profile user. */
 router.get('/', profilecontroller.showprofilepages);
+router.get('/friend/:userId', profilecontroller.showprofilepagefriend);
 router.get('/media/:userId', profilecontroller.getmedia);
+
 router.post('/upload', upload.single('media'), profilecontroller.upload);
 router.delete('/media/:mediaId', profilecontroller.deletemedia);
 

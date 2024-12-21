@@ -91,10 +91,12 @@ main {
 }
 
 .like-btn{
-  background-color: #0087ad;
+  background-color: white !important;
+  border-radius: 8px;
 }
+
 .like-btn:hover{
-  background-color: #81ceca;
+  background-color: #33d6ce;
 }
 
 #change-img:hover {
@@ -174,12 +176,30 @@ h2 {
   margin-bottom: 10px;
 }
 
-.post .media img,
-.post .media video,
-.post .media audio {
+/* Căn chỉnh media */
+.media-item {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* Cải thiện hiển thị hình ảnh */
+.media-image {
+  max-width: 100%; /* Hình ảnh sẽ tự động co dãn theo kích thước của container */
+  height: auto;
+  border-radius: 5px;
+}
+
+/* Cải thiện hiển thị video */
+.media-video {
   max-width: 100%;
-  border-radius: 8px;
-  margin: 10px 0;
+  height: auto;
+  border-radius: 5px;
+}
+
+/* Cải thiện hiển thị âm thanh */
+.media-audio {
+  width: 100%;
+  margin-top: 10px;
 }
 
 .post .comments {

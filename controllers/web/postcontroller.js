@@ -4,6 +4,7 @@ const postlike = require('../../models/post/postlike');
 const postmedia = require('../../models/post/postmedia');
 const Media = require('../../models/media/media'); // Assuming you have this model for media files
 const path = require('path'); 
+const Comment = require('../../models/comment/comment');
 const { post } = require('../../routes/web/post');
 
 exports.getallpost = async (req, res) => {
@@ -24,11 +25,13 @@ exports.getallpost = async (req, res) => {
 
     let postsWithMedia = [];
 
-    for (let post of mypost) {
+    for (let posted of mypost) {
       // Lấy tất cả media liên quan đến bài viết
       const postMedia = await postmedia.find({
-        Post: post._id
-      }).populate('media', 'filename filepath MediaType').exec();
+        Post: posted._id
+      })
+      .populate('media', 'filename filepath MediaType')
+      .exec();
 
       //console.log('Post Media:', postMedia); // In ra thông tin media của bài viết
 
@@ -40,11 +43,16 @@ exports.getallpost = async (req, res) => {
           MediaType: postMediaItem.media.MediaType
         });
       });
-      
+
+      const likecount = await postlike.find({ post: posted._id });
+
+      //console.log(likecount);
+
       // Thêm thông tin bài viết, media và cộng đồng
       postsWithMedia.push({
-        post: post,
+        post: posted,
         media: media,
+        likecount: likecount.length,
       });
       //console.log(postsWithMedia);
     }
@@ -69,9 +77,9 @@ exports.getmypost = async (req, res) => {
     
     let postsWithMedia = [];
 
-    for (let post of mypost) {
+    for (let posted of mypost) {
       const postMedia = await postmedia.find({
-        Post: post._id
+        Post: posted._id
       }).populate('media', 'filename filepath MediaType').exec();
 
       let media = [];
@@ -83,9 +91,14 @@ exports.getmypost = async (req, res) => {
         });
       });
 
+      const likecount = await postlike.find({ post: posted._id });
+      //console.log(likecount);
+
+      // Thêm thông tin bài viết, media và cộng đồng
       postsWithMedia.push({
-        post: post,
-        media: media
+        post: posted,
+        media: media,
+        likecount: likecount.length,
       });
       //console.log(postsWithMedia);
     }
@@ -97,47 +110,57 @@ exports.getmypost = async (req, res) => {
   }
 };
 
-exports.getramdompost = async (req, res) => {
+exports.getyourpost = async (req, res) => {
   try {
-    const mypost = await Post.aggregate([
-      { $sample: { size: 10 } }, // Lấy ngẫu nhiên 10 bài post
-      {
-        $lookup: {
-          from: 'users', // Tên collection của User
-          localField: 'Author',
-          foreignField: '_id',
-          as: 'AuthorDetails',
-        },
-      },
-      { $unwind: '$AuthorDetails' }, // Giải phóng mảng AuthorDetails
-      {
-        $lookup: {
-          from: 'postmedias', // Tên collection của PostMedia
-          localField: '_id',
-          foreignField: 'Post',
-          as: 'media',
-        },
-      },
-      {
-        $lookup: {
-          from: 'medias', // Tên collection của Media
-          localField: 'media.media',
-          foreignField: '_id',
-          as: 'mediaFiles',
-        },
-      },
-    ]);
-    
-    if (!mypost) {
+    const userId = req.params.userId;
+    const mypost = await Post.find({ Author: userId })
+    .populate('Author', 'username') // Lấy thông tin tác giả
+    .exec(); 
+
+    if (!mypost || mypost.length === 0) {
       return res.status(400).json({ message: 'No post found' });
     }
+    
+    let postsWithMedia = [];
 
-    return res.status(200).json({ message: 'List your post', post: mypost });
+    for (let posted of mypost) {
+      const postMedia = await postmedia.find({
+        Post: posted._id
+      }).populate('media', 'filename filepath MediaType').exec();
+
+      let media = [];
+      postMedia.forEach(postMediaItem => {
+        media.push({
+          filename: postMediaItem.media.filename,
+          filepath: postMediaItem.media.filepath.replace(/\\/g, '/'), // Fix path separator
+          MediaType: postMediaItem.media.MediaType
+        });
+      });
+
+      const likecount = await postlike.find({ post: posted._id });
+      //console.log(likecount);
+
+      // Thêm thông tin bài viết, media và cộng đồng
+      postsWithMedia.push({
+        post: posted,
+        media: media,
+        likecount: likecount.length,
+      });
+      //console.log(postsWithMedia);
+    }
+
+    return res.status(200).json({ message: 'success', posts: postsWithMedia });
   } catch (error) {
     console.log(error);
-    return res.status(500).send(error);
+    res.status(500).send(error);
   }
 };
+
+exports.postdescription = async (req, res) => {
+  const postId = req.params.post;
+  const post = await Post.findbyId({ postId });
+  res.status(200).render('postdescription', {title: post.title, description: post.content});
+}
 
 
 exports.pushpost = async (req, res) => {
@@ -187,44 +210,23 @@ exports.pushpost = async (req, res) => {
   }
 };
 
-exports.getlikepost = async (req, res) => {
-  try {
-    const userId = req.session.userId;
-    const { postId } = req.body;
-    
-    // Check if the user has already liked the post
-    const existinglikepost = await postlike.find({
-      post: postId,
-      User: userId,
-    });
-
-    if (existinglikepost) {
-      return res.status(200).json({ isLiked: true });
-    }
-
-
-    return res.status(200).json({ isLiked: false });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).send('Internal Server Error');
-  }
-};
-
 exports.likepost = async (req, res) => {
   try {
     const userId = req.session.userId;
     const { postId } = req.body;
     
+    console.log(postId, userId);
+
     // Check if the user has already liked the post
-    const existinglikepost = await postlike.findOne({
+    const existinglikepost = await postlike.find({
       post: postId,
-      User: userId,
+      User: userId
     });
 
-    if (existinglikepost) {
+    if (existinglikepost.length > 0) {
       // Remove like if it already exists
-      await postlike.deleteOne(existinglikepost);
-      return res.status(200).json({ message: 'You disliked the post successfully', isLiked: false });
+      await postlike.deleteOne({ _id: existinglikepost[0]._id });
+      return res.status(200).json({ message: 'You disliked the post successfully', isLiked: false, likeCount: await postlike.countDocuments({ post: postId }) });
     }
 
     // Add a new like to the post if not already liked
@@ -234,12 +236,67 @@ exports.likepost = async (req, res) => {
     });
     await newlikepost.save();
 
-    return res.status(200).json({ message: 'You liked the post successfully', isLiked: true });
+    return res.status(200).json({ message: 'You liked the post successfully', isLiked: true, likeCount: await postlike.countDocuments({ post: postId }) });
   } catch (error) {
     console.log(error);
     return res.status(500).send('Internal Server Error');
   }
 };
+
+exports.getpostpage = async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    console.log(postId);
+
+    // Sử dụng findOne để lấy bài post theo ID (nếu chỉ có 1 bài)
+    const post = await Post.findOne({ _id: postId })
+      .populate('Author', 'username')
+      .populate('Community', 'name') 
+      .exec();
+
+    if (!post) {
+      return res.status(404).send('Post not found');
+    }
+
+    const Media = await postmedia.find({ Post: post._id })
+      .populate('media', 'filename filepath MediaType')
+      .exec();
+
+    let media = [];
+    Media.forEach(postMediaItem => {
+      media.push({
+        filename: postMediaItem.media.filename,
+        filepath: postMediaItem.media.filepath.replace(/\\/g, '/'), // Fix đường dẫn
+        MediaType: postMediaItem.media.MediaType
+      });
+    });
+
+    let postwithmedia =[];
+
+    postwithmedia.push({
+      post: post,
+      media: media
+    });
+
+    return res.render('postdescription', { post: postwithmedia });  // Gửi dữ liệu bài viết đến view
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send('Internal Server Error');
+  }
+}
+
+exports.deletepost = async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    console.log(postId);
+
+    const post = await Post.find({ _id: postId});
+    return res.render('postdescription', {post: post})
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send('Internal Server Error');
+  }
+}
 
 exports.searchpost = async (req, res) => {
   try{
@@ -263,3 +320,68 @@ exports.searchpost = async (req, res) => {
   }
  
 }
+
+// exports.getlikepost = async (req, res) => {
+//   try {
+//     const userId = req.session.userId;
+//     const { postId } = req.body;
+    
+//     // Check if the user has already liked the post
+//     const existinglikepost = await postlike.find({
+//       post: postId,
+//       User: userId,
+//     });
+
+//     if (existinglikepost) {
+//       return res.status(200).json({ isLiked: true });
+//     }
+
+
+//     return res.status(200).json({ isLiked: false });
+//   } catch (error) {
+//     console.log(error);
+//     return res.status(500).send('Internal Server Error');
+//   }
+// };
+
+/*exports.getramdompost = async (req, res) => {
+  try {
+    const mypost = await Post.aggregate([
+      { $sample: { size: 10 } }, // Lấy ngẫu nhiên 10 bài post
+      {
+        $lookup: {
+          from: 'users', // Tên collection của User
+          localField: 'Author',
+          foreignField: '_id',
+          as: 'AuthorDetails',
+        },
+      },
+      { $unwind: '$AuthorDetails' }, // Giải phóng mảng AuthorDetails
+      {
+        $lookup: {
+          from: 'postmedias', // Tên collection của PostMedia
+          localField: '_id',
+          foreignField: 'Post',
+          as: 'media',
+        },
+      },
+      {
+        $lookup: {
+          from: 'medias', // Tên collection của Media
+          localField: 'media.media',
+          foreignField: '_id',
+          as: 'mediaFiles',
+        },
+      },
+    ]);
+    
+    if (!mypost) {
+      return res.status(400).json({ message: 'No post found' });
+    }
+
+    return res.status(200).json({ message: 'List your post', post: mypost });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send(error);
+  }
+};*/

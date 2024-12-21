@@ -12,7 +12,7 @@ body {
 
 /* Header */
 header {
-    background-color: #008CBA;
+    background-color: #31bae8;
     padding: 10px;
 }
 header ul {
@@ -28,7 +28,8 @@ header li a {
     border-radius: 4px;
 }
 header li a:hover {
-    background-color: #005f72;
+    background-color: #d5e2d8;
+    color: black !important;
 }
 
 /* Nội dung chính */
@@ -62,7 +63,7 @@ header li a:hover {
     width: 100%;
     padding: 10px;
     border: none;
-    background-color: #008CBA;
+    background-color: #2ed051;
     color: white;
     border-radius: 8px;
     text-align: left;
@@ -136,4 +137,67 @@ footer {
     padding: 20px;
     text-align: center;
     color: white;
+}
+
+/* Media Query */
+@media screen and (max-width: 768px) {
+    /* Header */
+    header ul {
+        flex-direction: column;
+        align-items: center;
+    }
+    header li a {
+        font-size: 16px;
+        padding: 8px 15px;
+    }
+
+    /* Section */
+    #section {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    /* Chat Group */
+    #group-chat {
+        width: 100%;
+    }
+
+    /* Form Chat */
+    #form-chat {
+        width: 100%;
+    }
+    #message-chat {
+        max-height: 300px;
+    }
+    .message-input-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+    .message-input {
+        width: 100%;
+    }
+    .send-button {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    /* Header */
+    header li a {
+        font-size: 14px;
+        padding: 6px 10px;
+    }
+
+    /* Form Chat */
+    #message-chat {
+        max-height: 200px;
+    }
+    .message-input {
+        font-size: 14px;
+        height: 35px;
+    }
+    .send-button {
+        font-size: 14px;
+        height: 35px;
+    }
 }

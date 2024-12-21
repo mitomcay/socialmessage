@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Details</title>
+    <link rel="stylesheet" href="/stylesheets/postdescription.css">
+</head>
+<body>
+    <header>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/profile">Profile</a></li>
+            <li><a href="/message">Messages</a></li>
+            <li><a href="/community/page">Community</a></li>
+            <li><a href="/friend/Orderfriend">Friend</a></li>
+        </ul>
+    </header>   
+
+    <% if (post && post.length > 0) { %>
+        <div class="post-container">
+            <% if (post[0].post.Community?._id != '67651ab7d883a8fa98ebfac4' && post[0].post.IsCommunityPost) { %>
+                <h2><%= post[0].post.Community.name %></h2>
+            <% } %>
+            <p class="author"><strong><h4>Author: <%= post[0].post.Author?.username %></h4></strong></p>
+            <p class="content"><%= post[0].post.content %></p>
+
+            <!-- Hiển thị media -->
+            <% if (post[0].media.length > 0) { %>
+                <div class="media-container">
+                    <% post[0].media.forEach( function(mediaItem) { %>
+                        <% if (mediaItem.MediaType === 'Image') { %>
+                            <img src="<%= mediaItem.filepath %>" alt="<%= mediaItem.filename %>">
+                        <% } else if (mediaItem.MediaType === 'video') { %>
+                            <video controls>
+                                <source src="<%= mediaItem.filepath %>" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        <% } else if (mediaItem.MediaType === 'Audio') { %>
+                            <audio controls>
+                                <source src="<%= mediaItem.filepath %>" type="audio/mp3">
+                                Your browser does not support the audio tag.
+                            </audio>
+                        <% } %>
+                    <% }); %>
+                </div>
+            <% } else { %>
+                <span></span>
+            <% } %>
+        </div>
+    <% } else { %>
+        <p>Post not found.</p>
+    <% } %>
+
+    <!-- Phần bình luận -->
+    <div class="comments-section">
+        <h3>Comments</h3>
+        <!-- Form thêm bình luận -->
+        <form id="comment-form" >
+            <input id="postid" type="hidden" name="postId" value="<%= post[0].post?._id %>">
+            <textarea id="comment-input" name="content" rows="4" placeholder="Your comment" required></textarea>
+            <button type="submit">Comment</button>
+        </form>
+        <div id="comment-container">
+
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="/javascripts/postcomment.js"></script>
+</body>
+</html>

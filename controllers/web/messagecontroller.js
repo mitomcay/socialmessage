@@ -26,6 +26,8 @@ exports.sendMessage = async (req, res) => {
       senderId,
       chat: chatId,
       repliedmessage: repliedMessageId || null,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
     });
 
     // Nếu có media, tạo liên kết với messagemedia

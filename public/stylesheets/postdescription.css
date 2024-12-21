@@ -1,0 +1,284 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background-color: #248ed0;
+    padding: 10px 0;
+    text-align: center;
+}
+
+header ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+header ul li {
+    display: inline;
+    margin: 0 15px;
+}
+
+header ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+header ul li a:hover {
+    color: #ddd;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-top: 20px;
+}
+
+.post-container {
+    background-color: #fff;
+    padding: 30px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 900px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-bottom: 40px;
+}
+
+h2 {
+    font-size: 28px;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.content {
+    font-size: 18px;
+    color: #555;
+    line-height: 1.8;
+    margin: 20px 0;
+}
+
+.author, .date {
+    font-size: 16px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.media-container {
+    margin-top: 20px;
+}
+
+.media-container img, .media-container video, .media-container audio {
+    max-width: 100%;
+    margin: 10px 0;
+    border-radius: 8px;
+}
+
+.media-container video {
+    max-height: 400px;
+}
+
+.media-container audio {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.comments-section {
+    margin-top: 60px;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.comment {
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.comment p {
+    margin: 5px 0;
+}
+
+.comment .author {
+    font-weight: bold;
+    color: #333;
+}
+
+.comment-form input[type="text"], .comment-form textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.comment-form button {
+    padding: 12px 20px;
+    background-color: #5c6bc0;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.comment-form button:hover {
+    background-color: #3f51b5;
+}
+
+.no-media {
+    font-size: 16px;
+    color: #777;
+    margin-top: 20px;
+}
+
+.comments-section h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+/* Add responsive behavior */
+@media screen and (max-width: 768px) {
+    .post-container, .comments-section {
+        width: 95%;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    .content {
+        font-size: 16px;
+    }
+
+    .comment-form textarea {
+        font-size: 14px;
+    }
+}
+
+/* Responsive styles for tablet screens */
+@media screen and (max-width: 1024px) {
+    .post-container, .comments-section {
+        width: 90%;
+        padding: 25px;
+    }
+
+    h2 {
+        font-size: 26px;
+    }
+
+    .content {
+        font-size: 17px;
+    }
+
+    .comment-form input[type="text"], .comment-form textarea {
+        font-size: 15px;
+    }
+
+    .comment-form button {
+        font-size: 15px;
+    }
+}
+
+/* Responsive styles for mobile screens */
+@media screen and (max-width: 768px) {
+    .post-container, .comments-section {
+        width: 95%;
+        padding: 20px;
+    }
+
+    h2 {
+        font-size: 24px;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+
+    .content {
+        font-size: 16px;
+    }
+
+    .comment {
+        padding: 10px;
+    }
+
+    .comment p {
+        font-size: 14px;
+    }
+
+    .comment-form input[type="text"], .comment-form textarea {
+        font-size: 14px;
+    }
+
+    .comment-form button {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+
+    .media-container img, .media-container video {
+        max-height: 300px;
+    }
+}
+
+/* Responsive styles for small mobile screens */
+@media screen and (max-width: 480px) {
+    header ul li {
+        display: block;
+        margin: 10px 0;
+        text-align: center;
+    }
+
+    h1 {
+        font-size: 1.6rem;
+    }
+
+    h2 {
+        font-size: 20px;
+    }
+
+    .content {
+        font-size: 14px;
+    }
+
+    .post-container, .comments-section {
+        padding: 15px;
+    }
+
+    .comment {
+        padding: 8px;
+    }
+
+    .comment p {
+        font-size: 13px;
+    }
+
+    .comment-form input[type="text"], .comment-form textarea {
+        font-size: 13px;
+        padding: 8px;
+    }
+
+    .comment-form button {
+        font-size: 13px;
+        padding: 8px 12px;
+    }
+
+    .media-container img, .media-container video {
+        max-height: 200px;
+    }
+}

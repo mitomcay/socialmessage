@@ -10,8 +10,9 @@
 </head>
 <body>
     <section>
-        <nav>
-            <div class="logo">2 FRIEND</div>
+        <nav >
+            <div class="logo"><a href="/">2 FRIEND</a></div>
+            <div><a href="/profile">Your profile</a></div>
         </nav>
     </section>
 
@@ -19,13 +20,16 @@
         <div class="sidebar">
             <ul>
                 <li><a href="/">Home</a></li>
-                <li><a href="/profile">Profile</a></li>
-                <li><a href="/message">Messages</a></li>
                 <li><a href="/community/page">Community</a></li>
-                <li></li>
+                <li><a href="/message">Messages</a></li>
                 <li>
                     <div class="search-bar">
                         <input type="text" id="searchInput" placeholder="Search..." />
+                    </div>
+                </li>
+                <li>
+                    <div id="search-post-result">
+
                     </div>
                 </li>
             </ul>
@@ -46,8 +50,10 @@
             </section>
 
             <section class="posts">
-                <h2>Recent Posts</h2>
-                <!-- Posts will be dynamically injected here -->
+                <h2>All Posts</h2>
+                <div id="all-post">
+
+                </div>
             </section>
         </div>
 
@@ -62,9 +68,10 @@
                 <!-- Search results will be displayed here -->
             </div>
         </div>
-        
     </div>
-
+    <footer>
+        <p>&copy; 2024 - 2 Friend - Friend Manager</p>
+    </footer>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/javascripts/main.js"></script>
 </body>

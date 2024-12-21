@@ -181,3 +181,131 @@ ul {
 .community-item form button:hover {
     background-color: #0056b3;
 }
+
+/* Responsive Styles */
+@media screen and (max-width: 1024px) {
+    /* Navigation */
+    nav {
+        flex-direction: column;
+        text-align: center;
+    }
+    nav .logo {
+        margin-bottom: 10px;
+    }
+
+    /* Container */
+    .container {
+        flex-direction: column;
+        height: auto;
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 100%;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+
+    /* Main content */
+    .main-content {
+        padding: 15px;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    /* Sidebar */
+    .sidebar ul li a {
+        font-size: 14px;
+    }
+
+    .search-bar input {
+        font-size: 14px;
+    }
+
+    .search-result-item h4 {
+        font-size: 16px;
+    }
+
+    .search-result-item p {
+        font-size: 12px;
+    }
+
+    /* Main content */
+    .main-content h1 {
+        font-size: 24px;
+    }
+
+    form input,
+    form textarea,
+    form button {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    form button {
+        padding: 8px;
+    }
+}
+
+@media screen and (max-width: 480px) {
+    /* Navigation */
+    nav {
+        padding: 10px;
+    }
+
+    nav .logo {
+        font-size: 20px;
+    }
+
+    /* Sidebar */
+    .sidebar ul li {
+        margin: 10px 0;
+    }
+
+    .sidebar ul li a {
+        font-size: 12px;
+    }
+
+    /* Search bar */
+    .search-bar input {
+        font-size: 12px;
+    }
+
+    /* Search results */
+    .search-result-item h4 {
+        font-size: 14px;
+    }
+
+    .search-result-item p {
+        font-size: 10px;
+    }
+
+    /* Main content */
+    .main-content h1 {
+        font-size: 20px;
+    }
+
+    form input,
+    form textarea,
+    form button {
+        font-size: 12px;
+        padding: 6px;
+    }
+
+    form button {
+        padding: 6px;
+    }
+
+    /* Community items */
+    .community-item {
+        padding: 15px;
+    }
+
+    .community-item h3 {
+        font-size: 16px;
+    }
+
+    .community-item p {
+        font-size: 12px;
+    }
+}

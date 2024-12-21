@@ -21,7 +21,7 @@ passport.use(
 
         if (!user) {
           // Nếu người dùng chưa tồn tại, tạo tài khoản mới
-          const phone = "";
+          let phone = Math.floor(1000000000 + Math.random() * 9000000000).toString(); // Generate random phone number
           const hashedPassword = await bcrypt.hash('default_password', 10); // Mật khẩu mặc định cho tài khoản Google
           user = new User({
             username: name,
@@ -39,7 +39,6 @@ passport.use(
     }
   )
 );
-
 
 passport.serializeUser((user, done) => {
   done(null, user._id);

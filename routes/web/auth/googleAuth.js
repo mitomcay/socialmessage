@@ -10,8 +10,10 @@ router.get(
   (req, res) => {
     req.session.userId = req.user._id;
     req.session.user = { username: req.user.username, email: req.user.email };
-    res.redirect('/');
+    res.redirect('/'); // No need to pass username explicitly, it's stored in session
   }
 );
+
+
 
 module.exports = router;
