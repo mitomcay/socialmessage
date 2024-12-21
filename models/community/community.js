@@ -12,6 +12,7 @@ const  communitychema  = mongoose.Schema({
     CommunityPicture:{
         type: mongoose.Schema.ObjectId,
         ref: 'media',
+        required: false
     },
     createdAt:{
         type: Date,

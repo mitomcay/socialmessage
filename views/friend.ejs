@@ -14,41 +14,81 @@
             <li><a href="/message">Messages</a></li>
             <li><a href="/community/page">Community</a></li>
             <li><a href="/friend/Orderfriend">Friend</a></li>
+            <li>
+                <div class="friends">
+                    <div class="search-friends">
+                        <input type="text" id="friend-search" placeholder="Search friends..." />
+                        <button type="button" onclick="searchFriends()">Search</button>
+                    </div>
+                    
+                </div>
+            </li>
         </ul>
     </header>
-    <div class="content">
-        <h1 class="page-title">Friends Order</h1>
-        <% if (Array.isArray(friends) && friends.length > 0) { %>
-            <ul class="friend-list">
-                <% friends.forEach(friend => { %>
-                    <li class="friend-item">
-                        Friend: <%= friend.Sender.username %> - Status: <%= friend.Status %>
-                        <% if (friend.Status === 'Pending') { %>
-                            <button type="button" class="accept-btn" onclick="Accept('<%= friend.Sender._id %>')">Accept</button>
-                        <% } %>
-                    </li>
-                <% }); %>
-            </ul>
-        <% } else { %>
-            <p>No friends.</p>
-        <% } %>
-    </div>
 
-    <div class="friends">
-        <h2>Search for Friends</h2>
-        <div class="search-friends">
-            <input type="text" id="friend-search" placeholder="Search for friends..." />
-            <button type="button" class="search-btn" onclick="searchFriends()">Search</button>
+    <div class="section" style="display: flex;">
+        <div id="slide-1">
+            <h1>Your Friend</h1>
+            <div class="friend-info"></div>
         </div>
-        <div id="search-results"></div>
+        <div class="slide-2">
+            <h1 class="page-title">Friend Requests</h1>
+            <% if (Array.isArray(friends) && friends.length > 0) { %>
+                <ul class="friend-list">
+                    <% friends.forEach(friend => { %>
+                        <li class="friend-item">
+                            <p>Friend: <%= friend.Sender.username %> - Status: <%= friend.Status %></p>
+                            <% if (friend.Status === 'Pending') { %>
+                                <button class="accept-btn" onclick="Accept('<%= friend.Sender._id %>')">Accept</button>
+                            <% } %>
+                        </li>
+                    <% }); %>
+                </ul>
+            <% } else { %>
+                <p>No friend requests at the moment.</p>
+            <% } %>
+        </div>
+        <div id="slide-3">
+            <h1 class="page-title">Search: </h1>
+            <div id="search-results"></div>
+        </div>
     </div>
-
     <footer>
-        <p>&copy; 2024 Friend Manager</p>
+        <p>&copy; 2024 - 2 Friend - Friend Manager</p>
     </footer>
-
+    
     <script>
-        // Function to accept friend request
+        window.onload = function () {
+            loadfriend();
+        };
+
+        async function loadfriend() {
+            try {
+                const response = await fetch('/friend/allfriend');
+                if (!response.ok) {
+                    throw new Error('Failed to load friends');
+                }
+                const data = await response.json();
+                const friendDiv = document.querySelector('.friend-info');
+                friendDiv.innerHTML = '';
+                console.log(data.friends);
+
+                if (data.friends.length === 0) {
+                    friendDiv.innerHTML = '<p>No friends found.</p>';
+                    return;
+                }
+
+                data.friends.forEach(friend => {
+                    friendDiv.innerHTML += `
+                        <p>Friend: ${friend.username} - Status: ${friend.friendshipType}</p>
+                    `;
+                });
+            } catch (error) {
+                console.error('Error loading friends:', error);
+                document.querySelector('.friend-info').innerHTML = '<p>Error loading friends. Please try again later.</p>';
+            }
+        }
+
         async function Accept(requestId) {
             const response = await fetch('/friend/acceptfriend', {
                 method: 'POST',
@@ -67,7 +107,6 @@
             .catch(error => console.error('Error:', error));
         }
 
-        // Function to search for friends
         function searchFriends() {
             const searchInput = document.getElementById('friend-search').value;
 
@@ -77,30 +116,44 @@
             }
 
             fetch(`/friend/search?name=${encodeURIComponent(searchInput)}`)
-                .then(response => response.json())
-                .then(data => {
-                    const resultsDiv = document.getElementById('search-results');
-                    resultsDiv.innerHTML = '';
+            .then(response => response.json())
+            .then(data => {
+                const resultsDiv = document.getElementById('search-results');
+                resultsDiv.innerHTML = '';
 
-                    if (data.length === 0) {
-                        resultsDiv.innerHTML = '<p>No friends found.</p>';
-                        return;
-                    }
+                if (data.length === 0) {
+                    resultsDiv.innerHTML = '<p>No friends found.</p>';
+                    return;
+                }
 
-                    data.forEach(friend => {
+                console.log(data);
+
+                data.forEach(friend => {
+                    if (!friend.isFriend){
                         const friendElement = document.createElement('div');
                         friendElement.classList.add('friend-item');
                         friendElement.innerHTML = `
                             <p>${friend.username}</p>
-                            <button class="add-btn" onclick="sendFriendRequest('${friend._id}')">Send Friend Request</button>
+                            <button onclick="sendFriendRequest('${friend._id}')">Send Friend Request</button>
                         `;
                         resultsDiv.appendChild(friendElement);
-                    });
-                })
-                .catch(error => console.error('Error:', error));
+                    }
+                    else{
+                        const friendElement = document.createElement('div');
+                        friendElement.classList.add('friend-item');
+                        friendElement.innerHTML = `
+                            <p>${friend.username}</p>
+                            <button onclick="sendFriendRequest('${friend._id}')" disabled >Da la ban</button>
+                        `;
+                        resultsDiv.appendChild(friendElement);
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error searching for friends:', error);
+            });
         }
 
-        // Function to send friend request
         function sendFriendRequest(receiverId) {
             fetch('/friend/addfriend', {
                 method: 'POST',

@@ -47,28 +47,39 @@
     <script>
         const socket = io(); // Kết nối với server thông qua Socket.IO
         let currentChatId = null; // Theo dõi chat hiện tại
-    
+
         // Hàm tham gia nhóm chat và tải tin nhắn cũ qua WebSocket
         async function chat(chatId) {
-            currentChatId = chatId; // Lưu ID nhóm chat hiện tại
-            socket.emit('joinChat', chatId); // Tham gia nhóm chat qua WebSocket
-    
-            const btn = document.getElementById('btn');
-            btn.innerHTML = '';  // Xóa các phần tử cũ (nếu có)
-            btn.innerHTML += '<input id="message" type="text" placeholder="Nhập tin nhắn" class="message-input">';
-            btn.innerHTML += '<button type="submit" onclick="sendmessage(\'' + currentChatId + '\')" class="send-button">Send</button>';
-            socket.once('oldMessages', (messages) => { // dùng .once để đảm bảo chỉ lắng nghe 1 lần
-                const messageChat = document.getElementById('message-chat');
-                messageChat.innerHTML = ''; // Xóa các tin nhắn cũ
-
-                if (Array.isArray(messages) && messages.length > 0) {
-                    messages.forEach(message => {
-                        appendMessage(message.content); // Thêm từng tin nhắn vào giao diện
-                    });
-                } else {
-                    messageChat.innerHTML = '<p style="display: none;">Không có tin nhắn nào trong nhóm này.</p>';
+            console.log(currentChatId);
+            if (currentChatId !== chatId) {
+                // Nếu ID chat khác với nhóm hiện tại, thực hiện các bước sau
+                if (currentChatId) {
+                    socket.emit('leaveChat', currentChatId); // Rời khỏi nhóm chat hiện tại
                 }
-            });
+                
+                currentChatId = chatId;  // Cập nhật ID nhóm chat hiện tại
+                socket.emit('joinChat', chatId); // Tham gia nhóm chat mới qua WebSocket
+                
+                // Cập nhật giao diện nút gửi tin nhắn
+                const btn = document.getElementById('btn');
+                btn.innerHTML = '';  // Xóa các phần tử cũ (nếu có)
+                btn.innerHTML += '<input id="message" type="text" placeholder="Nhập tin nhắn" class="message-input">';
+                btn.innerHTML += '<button type="submit" onclick="sendmessage(\'' + currentChatId + '\')" class="send-button">Send</button>';
+                
+                // Lắng nghe tin nhắn cũ
+                socket.once('oldMessages', (messages) => {
+                    const messageChat = document.getElementById('message-chat');
+                    messageChat.innerHTML = ''; // Xóa các tin nhắn cũ
+
+                    if (Array.isArray(messages) && messages.length > 0) {
+                        messages.forEach(message => {
+                            appendMessage(message.content); // Thêm từng tin nhắn vào giao diện
+                        });
+                    } else {
+                        messageChat.innerHTML = '<p style="display: none;">Không có tin nhắn nào trong nhóm này.</p>';
+                    }
+                });
+            }
         }
     
         // Hàm gửi tin nhắn qua WebSocket

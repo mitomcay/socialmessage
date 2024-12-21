@@ -1,126 +1,134 @@
-/* General Body Styles */
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f9f9f9;
+/* General reset */
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
 }
 
-/* Header Styling */
-header {
-    background-color: #333;
-    padding: 10px 0;
-    text-align: center;
-}
-
-header ul {
-    list-style: none;
-    padding: 0;
-}
-
-header li {
-    display: inline;
-    margin-right: 20px;
-}
-
-header a {
-    color: white;
-    text-decoration: none;
-    font-size: 16px;
-}
-
-header a:hover {
-    text-decoration: underline;
-}
-
-/* Page Title */
-.page-title {
-    text-align: center;
-    margin-top: 20px;
+/* Body */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
     color: #333;
 }
 
-/* Friends Order Section */
-.friend-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.friend-item {
-    background-color: #fff;
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
-}
-
-button {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-.accept-btn {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.accept-btn:hover {
-    background-color: #45a049;
-}
-
-.search-btn {
+/* Header */
+header {
+    background-color: #2c3e50;
     padding: 10px 20px;
-    background-color: #007BFF;
-    color: white;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
 }
 
-.search-btn:hover {
-    background-color: #0056b3;
-}
-
-.add-btn {
-    padding: 8px 16px;
-    background-color: #28a745;
-    color: white;
-    border-radius: 5px;
-    border: none;
-    cursor: pointer;
-}
-
-.add-btn:hover {
-    background-color: #218838;
-}
-
-/* Search Results Section */
-#search-results {
+header ul {
+    list-style-type: none;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
 }
 
-.friend-item {
-    background-color: #fff;
-    padding: 15px;
-    width: 100%;
-    max-width: 400px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+header ul li {
+    margin: 0 15px;
 }
 
-/* Footer Styling */
+header ul li a {
+    color: #fff;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 10px;
+}
+
+header ul li a:hover {
+    background-color: #34495e;
+    border-radius: 5px;
+}
+
+/* Search bar */
+.search-friends {
+    display: flex;
+    align-items: center;
+}
+
+#friend-search {
+    padding: 5px;
+    margin-right: 10px;
+    font-size: 14px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+button {
+    padding: 5px 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+/* Main content */
+.section {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px;
+}
+
+/* Friend List */
+.friend-list {
+    list-style-type: none;
+}
+
+.friend-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.friend-item p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.accept-btn {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.accept-btn:hover {
+    background-color: #27ae60;
+}
+
+/* Search results */
+#search-results {
+    margin-top: 20px;
+}
+
+.friend-item button.add-btn {
+    background-color: #f39c12;
+}
+
+.friend-item button.add-btn:hover {
+    background-color: #e67e22;
+}
+
+/* Footer */
 footer {
     text-align: center;
-    background-color: #333;
+    padding: 20px;
+    background-color: #2c3e50;
     color: white;
-    padding: 20px 0;
     position: fixed;
-    bottom: 0;
     width: 100%;
+    bottom: 0;
+}
+
+footer p {
+    font-size: 14px;
 }

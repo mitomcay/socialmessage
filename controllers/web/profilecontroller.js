@@ -9,6 +9,8 @@ exports.showprofilepages = async (req, res) => {
             return res.status(404).json({ message: 'User not found!' });
         }
         res.render('profile', {
+            title: `Profile - ${user.username}`,
+            content: 'profile',
             username: user.username,
             email: user.email,
             avatar: user.avatar // Đường dẫn ảnh đại diện
@@ -74,4 +76,14 @@ exports.deletemedia = async (req, res) => {
         console.error(error);
         res.status(500).send('Error deleting media');
     }
+};
+
+exports.editprofile = async (req, res) => {
+    console.log('Rendering edit profile');
+    return res.status(200).render('edit');
+};
+
+exports.setting = async (req, res) => {
+    console.log('Rendering settings');
+    return res.status(200).render('setting');
 };

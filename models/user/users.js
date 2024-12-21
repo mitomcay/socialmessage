@@ -22,7 +22,6 @@ const userSchema = new mongoose.Schema({
     phone: {
         type: String,
         required: false,
-        unique: true,
     },
     password: {
         type: String,
@@ -80,6 +79,14 @@ const userSchema = new mongoose.Schema({
         }
     ]
 });
+
+userSchema.index(
+    { phone: 1 },  // Chỉ mục theo trường phone
+    { 
+      unique: true,  // Đảm bảo tính duy nhất
+      partialFilterExpression: { phone: { $ne: null } }  // Chỉ kiểm tra unique khi phone khác null
+    }
+  );
 
 // Tạo model từ schema
 const User = mongoose.model('User', userSchema);

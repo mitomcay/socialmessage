@@ -3,7 +3,7 @@ var router = express.Router();
 var authMiddleware = require('../../middlewares/web/authMiddleware');
 var friendController = require('../../controllers/web/friendrequestcontroller');
 
-router.get('/', authMiddleware, friendController.listfriend);
+router.get('/allfriend', authMiddleware, friendController.listfriend);
 router.get('/Requestfriend', authMiddleware, friendController.listrequestfriend);
 router.get('/Orderfriend', authMiddleware, friendController.listorderfriend);
 router.post('/addfriend', friendController.addfriend);

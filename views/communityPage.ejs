@@ -17,23 +17,143 @@
       <li><a href="/friend/Orderfriend">Friend</a></li>
     </ul>
   </header>
-
+  
+  <!-- Community Header with background image -->
+  <div class="community-header" style="background-image: url('<%= community.CommunityPicture.filepath %>');"></div>
+  
+  <!-- Community Name and Description -->
+  <p style="display: none;" id="communityId"> <%= community._id %></p>
   <h1><%= community.name %></h1>
   <p><%= community.description %></p>
 
-  <h2>Bài viết trong cộng đồng</h2>
+  <!-- Button to toggle post form visibility -->
+  <div>
+    <div id="form"></div>
+    <button id="btn-1" onclick="toggleForm()">Đăng bài</button>
+  </div>
+
+  <h2>Bài viết trong <%= community?.name %></h2>
   <ul>
     <% if (posts && Array.isArray(posts)) { %> 
-      <% posts.forEach(function(post) { %>
+      <% posts.forEach(function(postData) { %>
         <li>
-          <h3><%= post.Community.name %></h3>
-          <div><%= post.Author %></div>
-          <p><%= post.content %></p>
+          <div><%= postData.post.Author?.username %></div>
+          <p><%= postData.post.content %></p>
+          
+          <!-- Add media to the post -->
+          <% if (postData.media && postData.media.length > 0) { %>
+            <% postData.media.forEach(postMedia => { %>
+                <% let mediaContent = ''; %>
+                <% if (postMedia.MediaType === 'Image') { %>
+                    <img src="<%= postMedia.filepath %>" alt="media" />
+                <% } else if (postMedia.MediaType === 'Video') { %>
+                    <video controls>
+                        <source src="<%= postMedia.filepath %>" type="video/mp4">
+                    </video>
+                <% } else if (postMedia.MediaType === 'Audio') { %>
+                    <audio controls>
+                        <source src="<%= postMedia.filepath %>" type="audio/mp3">
+                    </audio>
+                <% } %>
+            <% }); %>
+          <% } %>
         </li>
       <% }); %>
-      <% } else { %>
-        <p>Không có cộng đồng nào để hiển thị.</p>
+    <% } else { %>
+      <p>Không có bài viết trong cộng đồng.</p>
     <% } %>
   </ul>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    async function toggleForm() {
+      const btn1 = document.getElementById('btn-1');
+      btn1.style.display = 'none';
+      const formContainer = document.getElementById('form');
+      // Check if the form is already present
+      if (formContainer.innerHTML === '') {
+        formContainer.innerHTML = `
+          <form id="postForm" enctype="multipart/form-data">
+            <textarea name="content" cols="30" rows="10" placeholder="Nhập nội dung bài viết"></textarea>
+            <div id="uploadForm">
+              <label for="image">Hình ảnh:</label>
+              <input type="file" id="mediaInput" name="media" accept="image/*, video/*" multiple>
+            </div>
+            <button type="submit">Đăng bài</button>
+          </form>`;
+        
+        // Attach event listener after the form is added to the DOM
+        document.getElementById('postForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const content = this.querySelector('textarea[name="content"]').value;
+            let mediaInput = document.getElementById('mediaInput').files;
+            const communityId = document.getElementById('communityId').innerText;
+            console.log(communityId);
+            let mediaIds = [];
+            if (mediaInput.length > 0) {
+                const uploadPromises = Array.from(mediaInput).map(async (file) => {
+                    const formData = new FormData();
+                    formData.append('media', file);
+                    let mediaType = '';
+                    if (file.type.startsWith('image/')) {
+                        mediaType = 'Image';
+                    } else if (file.type.startsWith('video/')) {
+                        mediaType = 'video';
+                    }
+                    else if (file.type.startsWith('Audio/')) {
+                        mediaType = 'Audio';
+                    }
+                    formData.append('MediaType', mediaType);
+
+                    try {
+                        const response = await fetch('/api/media/upload', {
+                            method: 'POST',
+                            body: formData,
+                        });
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            const media = result.data;
+                            mediaIds.push(media._id);
+                        } else {
+                            alert(`Failed to upload media: ${result.error}`);
+                        }
+                    } catch (err) {
+                        console.error('Error uploading file:', err);
+                    }
+                });
+
+                await Promise.all(uploadPromises); // Wait for all uploads to complete
+            }
+
+            try {
+                const postResponse = await fetch('/post', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        content,
+                        community: communityId, // Send communityId
+                        mediaIds: mediaIds,
+                    }),
+                });
+
+                if (postResponse.ok) {
+                    alert('Post created successfully!');
+                    window.location.reload(); // Reload posts
+                } else {
+                    alert('Failed to create post.');
+                }
+            } catch (err) {
+                console.error('Error creating post:', err);
+            }
+        });
+      } else {
+        formContainer.innerHTML = ''; // Clear the form if it already exists
+      }
+    }
+  </script>
 </body>
 </html>

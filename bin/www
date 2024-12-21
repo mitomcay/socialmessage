@@ -32,38 +32,52 @@ io.on('connection', (socket) => {
   console.log('Socket connected');
 
   socket.on('joinChat', async (chatId) => {
-    socket.join(chatId);
-    console.log(`User joined chat ${chatId}`);
-    try {
-        const findchat = await chat.findById(chatId);
-        if (!findchat) {
-            return; // Nếu không tìm thấy chat thì dừng lại
-        }
+      socket.join(chatId);
+      console.log(`User joined chat ${chatId}`);
+      try {
+          const findchat = await chat.findById(chatId);
+          if (!findchat) {
+              return; // Nếu không tìm thấy chat thì dừng lại
+          }
 
-        // Lấy danh sách các thành viên trong chat
-        const chatMembers = await chatmember.find({ Chat: chatId }).select('User');
-        const memberIds = chatMembers.map(member => member.User);
+          let messages = [];
+          // Lấy danh sách các thành viên trong chat
+          const chatMembers = await chatmember.find({ Chat: chatId }).select('User');
 
-        // Lấy tin nhắn của tất cả các thành viên
-        const messages = await message.find({})
-            .sort({ createdAt: -1 }) // Sắp xếp theo thời gian tạo tin nhắn từ cũ đến mới
-            .populate('repliedmessage')
-            .exec();
-        // Gửi tin nhắn đã sắp xếp
-        socket.emit('oldMessages', messages);
+          // Sử dụng Promise.all để xử lý tất cả các yêu cầu lấy tin nhắn đồng thời
+          const messagePromises = chatMembers.map(async member => {
+              //console.log(member.User._id);
+              const uniquemessage = await message.find({ chat: chatId, senderId: member.User._id })
+                  .sort({ createdAt: -1 }) // Sắp xếp theo thời gian tạo tin nhắn từ cũ đến mới
+                  .populate('repliedmessage')
+                  .exec();
+              return uniquemessage; // Trả về tin nhắn cho mỗi thành viên
+          });
 
-    } catch (error) {
-        console.error("Error in try block:", error.message);
-    }
+          // Chờ tất cả các tin nhắn được lấy về
+          messages = await Promise.all(messagePromises);
+          console.log(messages);
+
+          // Gửi tin nhắn đã sắp xếp cho client
+          socket.emit('oldMessages', messages.flat()); // Dùng .flat() để gộp tất cả các tin nhắn vào một mảng duy nhất
+
+      } catch (error) {
+          console.error("Error in joinChat:", error.message);
+      }
+  });
+
+  socket.on('leaveChat', (chatId) => {
+      socket.leave(chatId);
+      console.log(`Client left room: ${chatId}`);
   });
 
   socket.on('newMessage', async (message) => {
-    //console.log("Sending new message:", message);
-    socket.to(message.chat).emit('Messages', message); // Phát tán tin nhắn cho tất cả các client trong nhóm chat
+      // Gửi tin nhắn mới tới tất cả các client trong nhóm chat
+      socket.to(message.chat).emit('Messages', message);
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected');
+      console.log('User disconnected');
   });
 });
 
