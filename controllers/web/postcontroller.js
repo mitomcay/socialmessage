@@ -68,7 +68,8 @@ exports.getmypost = async (req, res) => {
   try {
     const userId = req.session.userId;
     const mypost = await Post.find({ Author: userId })
-    .populate('Author', 'username') // Lấy thông tin tác giả
+    .populate('Author', 'username')
+    .populate('Community', 'name')
     .exec(); 
 
     if (!mypost || mypost.length === 0) {
@@ -80,7 +81,9 @@ exports.getmypost = async (req, res) => {
     for (let posted of mypost) {
       const postMedia = await postmedia.find({
         Post: posted._id
-      }).populate('media', 'filename filepath MediaType').exec();
+      })
+      .populate('media', 'filename filepath MediaType')
+      .exec();
 
       let media = [];
       postMedia.forEach(postMediaItem => {
@@ -171,7 +174,7 @@ exports.pushpost = async (req, res) => {
     }
 
     const { content } = req.body;
-    const community = req.body.community.trim();
+    const community = req.body.community;
 
     let { mediaIds } = req.body;
     //console.log(content, community);

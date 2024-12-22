@@ -9,11 +9,15 @@ var favicon = require('serve-favicon');
 const passport = require('./config/passport-config');
 const session = require('express-session');
 const cors = require('cors');
-
 const MongoStore = require('connect-mongo');
+//const dialogflow = require('dialogflow');
+const { OpenAI } = require('openai');
+const bodyParser = require('body-parser');
 
 const dotenv = require('dotenv');
 dotenv.config();
+
+var chatbot = require('./routes/web/chatbot');
 
 // routes cho web
 var indexwebRouter = require('./routes/web/index');
@@ -89,6 +93,10 @@ app.use(passport.session());
 
 app.use(express.urlencoded({ extended: true }));
 app.use('/auth', googleAuthRoutes);
+app.use(bodyParser.json());
+
+// chatbot
+app.use('/chatbot', chatbot);
 
 // app.use web
 app.use('/', indexwebRouter); // Đặt indexRouter ở đây để xử lý khi người dùng đã đăng nhập

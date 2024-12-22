@@ -50,7 +50,6 @@
             <ul>
                 <% if (community && Array.isArray(community)) { %> 
                     <% community.forEach(function(cm) { %>
-                        <% if(cm._id != "67651ab7d883a8fa98ebfac4") { %>
                             <li class="community-item">
                                 <h3><%= cm.name %></h3>
                                 <p><%= cm.description %></p>
@@ -63,7 +62,6 @@
                                     <button type="submit">Truy cập cộng đồng</button>
                                 </form>
                             </li>
-                        <% } %>
                     <% }); %>
                 <% } else { %>
                     <p>Không có cộng đồng nào để hiển thị.</p>

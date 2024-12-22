@@ -26,7 +26,11 @@ const messagemedia = require('../models/message/messagemedia');
 const messagelike = require('../models/message/messagelike');
 const media = require('../models/media/media');
 const chatmember = require('../models/chat/chatmember');
+const user = require('../models/user/users');
 const chat = require('../models/chat/chat');
+const notifications = require('../models/notification/notification');
+
+app.locals.io = io;
 
 io.on('connection', (socket) => {
   console.log('Socket connected');
@@ -40,10 +44,12 @@ io.on('connection', (socket) => {
               return; // Nếu không tìm thấy chat thì dừng lại
           }
 
+
           let messages = [];
           // Lấy danh sách các thành viên trong chat
           const chatMembers = await chatmember.find({ Chat: chatId }).select('User');
 
+          
           // Sử dụng Promise.all để xử lý tất cả các yêu cầu lấy tin nhắn đồng thời
           const messagePromises = chatMembers.map(async member => {
               //console.log(member.User._id);
@@ -72,8 +78,25 @@ io.on('connection', (socket) => {
   });
 
   socket.on('newMessage', async (message) => {
-      // Gửi tin nhắn mới tới tất cả các client trong nhóm chat
-      socket.to(message.chat).emit('Messages', message);
+    // Gửi tin nhắn mới tới tất cả các client trong nhóm chat
+    const chatId = message.chatId;
+    //console.log(`Client new message: ${chatId}`);
+    socket.to(chatId).emit('Messages', message.data);
+    
+    const newnotification = await notifications.create({
+      user: message.senderId , 
+      type: 'message',
+      content: `new message by ${message.senderId}`
+    });
+
+    await newnotification.save();
+
+    const sender = await user.findById( message.senderId );
+
+    socket.to(chatId).emit('notification', {
+      type: 'message',
+      content: `Tin nhắn mới từ ${sender.username}`,
+    });
   });
 
   socket.on('disconnect', () => {

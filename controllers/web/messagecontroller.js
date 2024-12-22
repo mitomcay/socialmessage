@@ -4,7 +4,7 @@ const messagelike = require('../../models/message/messagelike');
 const media = require('../../models/media/media');
 const chatmember = require('../../models/chat/chatmember');
 const chat = require('../../models/chat/chat');
-
+const notifications = require('../../models/notification/notification');
 
 exports.sendMessage = async (req, res) => {
   try {
@@ -12,12 +12,12 @@ exports.sendMessage = async (req, res) => {
     const senderId = req.session.userId;
 
     // Kiểm tra độ dài tin nhắn
-    if (content.length > 500) {
-      return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn" });
+    if (!content || content.trim().length === 0) {
+      return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn" });
     }
 
-    if (content.length <= 0) {
-      return res.status(400).json({ message: "Bạn chưa nhập nội dung tin nhắn" });
+    if (content.length > 500) {
+      return res.status(400).json({ message: "Tin nhắn vượt quá giới hạn ký tự, vui lòng rút ngắn tin nhắn" });
     }
 
     // Tạo tin nhắn
@@ -33,13 +33,13 @@ exports.sendMessage = async (req, res) => {
     // Nếu có media, tạo liên kết với messagemedia
     if (mediaIds && mediaIds.length > 0) {
       await Promise.all(
-        mediaIds.map(async (mediaId) => {
-          return await messagemedia.create({
+        mediaIds.map((mediaId) =>
+          messagemedia.create({
             Chat: chatId,
             media: mediaId,
             message: newMessage._id,
-          });
-        })
+          })
+        )
       );
     }
 
@@ -55,13 +55,13 @@ exports.sendMessage = async (req, res) => {
     res.status(201).json({
       message: "Message sent successfully",
       data: newMessage,
+      senderId: senderId,
+      chatId: chatId
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 exports.getMessage = async (req, res) => {
   try {

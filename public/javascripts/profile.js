@@ -28,7 +28,7 @@ $(document).ready(function () {
 function fetchPosts() {
     try {
         $.ajax({
-            url: '/post/mypost/',
+            url: '/post/mypost',
             method: 'GET',
             success: function (data) {
                 const postContainer = $('#posts-container'); // Chọn container
@@ -64,7 +64,7 @@ function fetchPosts() {
                             : '';
 
                         let postContent = `<div style="border: 1px solid black; border-radius: 10px; padding: 10px; margin: 10px 0%;">
-                            ${ post.Community?._id != '67651ab7d883a8fa98ebfac4' && post.IsCommunityPost 
+                            ${ post.IsCommunityPost 
                                 ? `<div id="communtity">
                                     <a style=" text-decoration: none; color: black;" href="/community/${post.Community?._id}" >
                                         <h4>${post.Community?.name}</h4>
@@ -108,9 +108,9 @@ function fetchPosts() {
             },
             error: function (error) {
                 console.error('Error fetching posts:', error);
-                const postContainer = $('#all-post');
+                const postContainer = $('#posts-container');
                 if (postContainer) {
-                    postContainer.html(`<p>Unable to load posts. Please try again later.</p>`);
+                    postContainer.html(`<p>No posts available.</p>`);
                 }
             },
         });

@@ -1,3 +1,5 @@
+const socket = io();
+
 $('document').ready(function () {
     setInterval(fetchPosts, 1000);
 });
@@ -41,7 +43,7 @@ function fetchPosts() {
                             : '';
 
                         let postContent = `<div style="border: 1px solid black; border-radius: 10px; padding: 10px; margin: 10px 0%;">
-                            ${ post.Community?._id != '67651ab7d883a8fa98ebfac4' && post.IsCommunityPost 
+                            ${ post.IsCommunityPost 
                                 ? `<div id="communtity">
                                     <a style=" text-decoration: none; color: black;" href="/community/${post.Community?._id}" >
                                         <h4>${post.Community?.name}</h4>
@@ -126,7 +128,7 @@ document.getElementById('postForm').addEventListener('submit', async function (e
 
     const content = this.querySelector('textarea[name="content"]').value;
     let mediaInput = document.getElementById('mediaInput').files;
-    let community = '67651ab7d883a8fa98ebfac4';
+    let community = null;
 
     if (mediaInput.length > 0) {
         const uploadPromises = Array.from(mediaInput).map(async (file) => {
@@ -302,6 +304,50 @@ function sendFriendRequest(receiverId) {
     .catch(error => {
         console.error('Error sending friend request:', error);
     });
+}
+
+// chatbot
+const chatBox = document.getElementById('chat-box');
+const userInput = document.getElementById('user-input');
+const chatContainer = document.getElementById('chat-container');
+
+// Toggle chat visibility
+function toggleChat() {
+    if (chatContainer.style.display === 'none' || chatContainer.style.display === '') {
+        chatContainer.style.display = 'block';  // Show chatbox
+    } else {
+        chatContainer.style.display = 'none';  // Hide chatbox
+    }
+}
+
+// Function to send user message to backend
+function sendMessage() {
+    const message = userInput.value;
+    displayMessage(message, 'user');
+
+    fetch('/chatbot', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: message }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayMessage(data.reply, 'bot');
+    })
+    .catch(err => console.error('Error:', err));
+
+    userInput.value = '';  // Clear input field
+}
+
+// Function to display message
+function displayMessage(message, sender) {
+    const messageElement = document.createElement('div');
+    messageElement.textContent = message;
+    messageElement.classList.add(sender);
+    chatBox.appendChild(messageElement);
+    chatBox.scrollTop = chatBox.scrollHeight;  // Auto-scroll to the bottom
 }
 
 // async function checkIfPostLiked(postId) {
