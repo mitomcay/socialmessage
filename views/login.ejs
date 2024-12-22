@@ -8,15 +8,16 @@
 </head>
 <body>
     <div class="container">
+        <div class="title">2FRIEND</div>
         <h1>Welcome Back</h1>
         <form action="/login" method="POST">
             <div class="form-group">
-                <label for="username">Username/Email:</label>
-                <input type="text" id="username" name="username" required>
+                <input type="text" id="username" name="username" placeholder=" " required>
+                <label for="username">Username or Email:</label>
             </div>
             <div class="form-group">
+                <input type="password" id="password" name="password" placeholder=" " required>
                 <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
             </div>
             <% if (typeof error !== 'undefined' && error) { %>
                 <p class="error-message"><%= error %></p>
@@ -26,7 +27,10 @@
         <div class="register-link">
             <p>Don't have an account? <a href="/register">Register here</a></p>
         </div>
-        <button class="google-login" onclick="window.location.href='/auth/google'">Login with Google</button>
+        <button class="google-login" onclick="window.location.href='/auth/google'">
+            <img src="https://www.google.com/favicon.ico" alt="Google logo" width="20">
+            <span>Login with Google</span>
+        </button>
     </div>
 </body>
 </html>
