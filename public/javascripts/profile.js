@@ -28,7 +28,7 @@ $(document).ready(function () {
 function fetchPosts() {
     try {
         $.ajax({
-            url: '/post/mypost/',
+            url: '/post/mypost',
             method: 'GET',
             success: function (data) {
                 const postContainer = $('#posts-container'); // Chọn container
@@ -108,9 +108,9 @@ function fetchPosts() {
             },
             error: function (error) {
                 console.error('Error fetching posts:', error);
-                const postContainer = $('#all-post');
+                const postContainer = $('#posts-container');
                 if (postContainer) {
-                    postContainer.html(`<p>Unable to load posts. Please try again later.</p>`);
+                    postContainer.html(`<p>No posts available.</p>`);
                 }
             },
         });
