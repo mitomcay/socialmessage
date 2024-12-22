@@ -15,6 +15,8 @@
                 <li><a href="/community/page">Community</a></li>
                 <li><a href="/friend/Orderfriend">Friend</a></li>
             </ul>
+            <div id="notification-container">
+            </div>
         </header>
         <div id="section">
             <section id="group-chat">
@@ -22,7 +24,7 @@
                     <% data.forEach(chat => { %>
                         <div class="chat-group">
                             <% if (chat.Chat && chat.Chat._id) { %>
-                                <button onclick="chat('<%= chat.Chat._id %>')" class="chat-button"><%= chat.Chat.name %></button>
+                                <button onclick="chat('<%= chat.Chat._id %>')" class="chat-button" id="<%= chat.Chat._id %>"><%= chat.Chat.name %></button>
                             <% } else { %>
                                 <span style="display: none;">No chat available</span>
                             <% } %>
@@ -40,8 +42,12 @@
             </section>            
         </div>
     </div>
-    <footer></footer>
+    <footer>
+        <p>Copyright © 2021 Messenger. All rights reserved.</p>
+        <p>Powered by <a href="https://nodejs.org/">Node.js</a> and <a href="https://expressjs.com/">Express.js</a></p>
+    </footer>
 
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/javascripts/message.js"></script>
 </body>

@@ -183,6 +183,65 @@ nav div a {
     display: flex; /* Dùng Flexbox để căn giữa phần tử */
 }
 
+.chatbot-btn {
+    position: fixed;   /* Đảm bảo vị trí cố định trong viewport */
+    bottom: 10%;       /* Cách đáy màn hình 10% */
+    right: 10%;        /* Cách cạnh phải màn hình 10% */
+    font-size: 30px;   /* Kích thước icon */
+    background-color: #007bff; /* Màu nền */
+    color: white;      /* Màu icon */
+    padding: 15px;     /* Khoảng cách bên trong */
+    border-radius: 50%; /* Đường viền tròn */
+    cursor: pointer;  /* Con trỏ chuột khi di chuyển qua */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); /* Đổ bóng */
+}
+
+.chatbot-btn:hover {
+    background-color: #0056b3; /* Màu nền khi hover */
+}
+
+#chat-container {
+    position: fixed;   /* Đảm bảo vị trí cố định trong viewport */
+    bottom: 10%;        /* Cách đáy màn hình 10% */
+    right: 10%;         /* Cách cạnh phải màn hình 10% */
+    width: 300px;       /* Chiều rộng của khung chat */
+    height: 400px;      /* Chiều cao của khung chat */
+    background-color: white; /* Màu nền */
+    border-radius: 8px; /* Bo tròn các góc */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Đổ bóng */
+    display: none;      /* Ban đầu ẩn khung chat */
+    flex-direction: column;
+    justify-content: flex-end;
+    overflow-y: auto;
+}
+
+#chat-box {
+    padding: 10px;
+    height: 70%;
+    overflow-y: auto;
+}
+
+#user-input {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border-radius: 5px;
+    margin: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}   
+
 .comment-container {
     background-color: white;
     padding: 20px;

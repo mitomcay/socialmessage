@@ -52,8 +52,10 @@ async function sendmessage(chatId) {
         .then(response => response.json())
         .then(data => {
             appendMessage(data.data.content);
-            socket.emit('newMessage', data.data); // Gửi tin nhắn mới đến các client khác
+            socket.emit('newMessage', data); // Gửi tin nhắn mới đến các client khác
             document.getElementById('message').value = '';
+            //console.log(data.chatId);
+            
         })
         .catch(error => console.error(error));
     } else {
@@ -75,3 +77,24 @@ socket.on('Messages', async (message) => {
         appendMessage(message.content); // Chỉ thêm tin nhắn nếu đúng nhóm chat
     }
 });
+
+socket.on('notification', async (notification) => {
+    if (notification.type === 'message') {
+        //console.log('co tbao');
+        displayNotification(notification.content);
+    }
+});
+
+function displayNotification(content) {
+    const notificationContainer = document.getElementById('notification-container');
+    const notificationElement = document.createElement('div');
+    notificationElement.classList.add('notification');
+    notificationElement.innerText = content;
+
+    notificationContainer.appendChild(notificationElement);
+
+    // Tự động ẩn thông báo sau 5 giây
+    setTimeout(() => {
+        notificationElement.remove();
+    }, 5000);
+}
