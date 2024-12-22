@@ -4,7 +4,7 @@ const { OpenAI } = require('openai');
 require('dotenv').config();  // Để sử dụng biến môi trường từ .env file
 
 const openai = new OpenAI({
-  apiKey: '',  // Lấy API key từ biến môi trường
+  apiKey: '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',  // Lấy API key từ biến môi trường
 });
 
 router.post('/', async (req, res) => {

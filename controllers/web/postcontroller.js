@@ -174,7 +174,7 @@ exports.pushpost = async (req, res) => {
     }
 
     const { content } = req.body;
-    const community = req.body.community.trim();
+    const community = req.body.community;
 
     let { mediaIds } = req.body;
     //console.log(content, community);

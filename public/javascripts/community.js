@@ -8,7 +8,7 @@ document.getElementById('searchInput').addEventListener('input', async function 
         // Kiểm tra có cộng đồng nào tìm thấy không
         if (data.communities && data.communities.length > 0 ) {
             searchResultsContainer.innerHTML = data.communities.map(cm => {
-                if (cm._id !== "67651ab7d883a8fa98ebfac4") {
+                if (true) {
                     return `
                         <div class="search-result-item">
                             <form action="/community/page/${cm._id}" method="get">

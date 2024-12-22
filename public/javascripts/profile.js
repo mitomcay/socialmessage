@@ -64,7 +64,7 @@ function fetchPosts() {
                             : '';
 
                         let postContent = `<div style="border: 1px solid black; border-radius: 10px; padding: 10px; margin: 10px 0%;">
-                            ${ post.Community?._id != '67651ab7d883a8fa98ebfac4' && post.IsCommunityPost 
+                            ${ post.IsCommunityPost 
                                 ? `<div id="communtity">
                                     <a style=" text-decoration: none; color: black;" href="/community/${post.Community?._id}" >
                                         <h4>${post.Community?.name}</h4>
