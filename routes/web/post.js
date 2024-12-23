@@ -16,7 +16,7 @@ router.post('/', postcontroller.pushpost);
 router.post('/like', postcontroller.likepost);
 
 //router.get('/randompost', authMiddleware, postcontroller.getramdompost);
-// //router.post('/getlike', postcontroller.getlikepost);
+//router.post('/getlike', postcontroller.getlikepost);
 
 
 module.exports = router;

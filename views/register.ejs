@@ -4,40 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register</title>
-    <link rel="stylesheet" href="/stylesheets/style.css">
+    <link rel="stylesheet" href="/stylesheets/login.css"> <!-- Use login.css for consistent styling -->
 </head>
 <body>
     <div class="container">
+        <div class="title">2FRIEND</div>
         <h1>Create an Account</h1>
         <form action="/register" method="post">
             <div class="form-group">
-                <label for="username">Username:</label>
-                <input type="text" name="username" id="username" required />
+                <input type="text" name="username" id="username" placeholder=" " required>
+                <label for="username">Username<span class="required">*</span></label>
             </div>
             <div class="form-group">
-                <label for="email">Email:</label>
-                <input type="email" name="email" id="email" required />
+                <input type="email" name="email" id="email" placeholder=" " required>
+                <label for="email">Email<span class="required">*</span></label>
             </div>
             <div class="form-group">
-                <label for="phone">Phone:</label>
-                <input type="tel" name="phone" id="phone" required />
+                <input type="password" name="password" id="password" placeholder=" " required>
+                <label for="password">Password<span class="required">*</span></label>
             </div>
             <div class="form-group">
-                <label for="password">Password:</label>
-                <input type="password" name="password" id="password" required />
-            </div>
-            <div class="form-group">
-                <label for="confirmPassword">Password again:</label>
-                <input type="password" name="confirmPassword" id="confirmPassword" required />
+                <input type="password" name="confirmPassword" id="confirmPassword" placeholder=" " required>
+                <label for="confirmPassword">Confirm Password<span class="required">*</span></label>
             </div>
             <% if (typeof error !== 'undefined' && error) { %>
                 <p class="error-message"><%= error %></p>
             <% } %>
             <button type="submit">Register</button>
         </form>
-        <button class="google-login" onclick="window.location.href='/auth/google'">Register with Google</button>
+        <button class="google-login" onclick="window.location.href='/auth/google'">
+            <img src="https://www.google.com/favicon.ico" alt="Google logo" width="20">
+            <span>Log in with Google</span>
+        </button>
+        <hr>
         <div class="login-link">
-            <p>Already have an account? <a href="/login">Login here</a></p>
+            <p>Already have an account? <a href="/login">Login here!</a></p>
         </div>
     </div>
 </body>
